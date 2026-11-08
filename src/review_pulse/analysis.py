@@ -35,6 +35,7 @@ SIGNALS = {"tone": "d_tone", "stars": "d_stars"}
 def company_panel(company: Company, min_reviews: int = 30) -> pd.DataFrame:
     q = tone.quarterly(company)
     q = q[q["scored"] >= min_reviews].copy()
+    q = drop_partial_quarters(q)
     fin = financials.load(company.ticker)
     close, mkt = prices.load(company.ticker), prices.load(prices.MARKET)
     qs = sorted(set(q["qidx"]) | {x + 1 for x in q["qidx"]})
@@ -56,6 +57,16 @@ def company_panel(company: Company, min_reviews: int = 30) -> pd.DataFrame:
     df["abn_ret_next"] = [ret_by_q["abn_ret"].get(q + 1, np.nan) for q in df["qidx"]]
     df.insert(0, "ticker", company.ticker)
     return df
+
+
+def drop_partial_quarters(q: pd.DataFrame, ratio: float = 0.5) -> pd.DataFrame:
+    """Drop quarters at the end of the data whose review count falls below `ratio` x the median
+    of the 4 quarters before. The dataset tails off near its cutoff, leaving partial quarters."""
+    q = q.sort_values("qidx").reset_index(drop=True)
+    base = q["reviews"].shift(1).rolling(4, min_periods=2).median()
+    while len(q) > 2 and q["reviews"].iloc[-1] < ratio * base.iloc[len(q) - 1]:
+        q, base = q.iloc[:-1], base.iloc[:-1]
+    return q
 
 
 def outcome_col(name: str) -> str:

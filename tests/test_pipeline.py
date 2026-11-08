@@ -67,3 +67,9 @@ def test_analysis_finds_planted_signal():
     noise = res[(res["scope"] == "All companies") & (res["signal"] == "stars")
                 & (res["outcome"] == "next-quarter return")].iloc[0]
     assert abs(noise["rho"]) < 0.3
+
+
+def test_drop_partial_quarters_trims_tail_only():
+    q = pd.DataFrame({"qidx": range(8), "reviews": [100, 20, 110, 105, 98, 102, 40, 9]})
+    out = analysis.drop_partial_quarters(q)
+    assert out["qidx"].tolist() == [0, 1, 2, 3, 4, 5]
