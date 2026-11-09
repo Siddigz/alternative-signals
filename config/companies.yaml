@@ -44,6 +44,7 @@ companies:
   IRBT:
     name: iRobot
     fy_end_month: 12
+    cik: 1159167  # delisted after its 2025 bankruptcy, so not in the SEC ticker list
     stores: [iRobot]
     categories: [Home_and_Kitchen]
     wiki: [iRobot, Roomba]

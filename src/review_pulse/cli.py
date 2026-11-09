@@ -27,10 +27,12 @@ def main(argv: list[str] | None = None) -> None:
         if not a.skip_reviews:
             reviews.fetch(companies, cfg.start, cfg.end, keep_raw=not a.delete_raw)
         for c in companies:
-            financials.fetch(c)
-            prices.fetch(c, cfg.start, cfg.end)
-            wiki.fetch(c)
-            filings.fetch(c, cfg.start)
+            for step in (financials.fetch, lambda c: prices.fetch(c, cfg.start, cfg.end),
+                         wiki.fetch, lambda c: filings.fetch(c, cfg.start)):
+                try:
+                    step(c)
+                except (SystemExit, Exception) as e:  # keep going with the other companies
+                    print(f"{c.ticker}: FAILED - {e}")
 
     if "score" in steps:
         scorer = tone.Scorer()

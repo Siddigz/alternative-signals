@@ -16,7 +16,7 @@ import pandas as pd
 import requests
 
 from .config import DATA, Company
-from .financials import _headers, cik_for
+from .financials import _headers, company_cik
 from .quarters import add_quarter_columns
 
 FILINGS = DATA / "filings"
@@ -61,7 +61,7 @@ def fetch(company: Company, start: str) -> None:
     FILINGS.mkdir(parents=True, exist_ok=True)
     path = FILINGS / f"{company.ticker}.parquet"
     cached = pd.read_parquet(path) if path.exists() else pd.DataFrame(columns=["accessionNumber"])
-    cik = cik_for(company.ticker)
+    cik = company_cik(company)
     idx = filing_index(cik)
     # One year before the window so the first year-over-year comparison exists.
     idx = idx[idx["filingDate"] >= str(pd.Timestamp(start) - pd.DateOffset(years=1))[:10]]

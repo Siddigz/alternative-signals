@@ -71,9 +71,13 @@ def company_panel(company: Company, start: str, min_reviews: int = 30) -> pd.Dat
     first = qidx(*fiscal_quarter(pd.Timestamp(start).date(), company.fy_end_month))
     df = fin[fin["qidx"] >= first][["qidx", "quarter", "end", "revenue", "net_income",
                                     "rev_yoy", "growth_change"]].copy()
-    close, mkt = prices.load(company.ticker), prices.load(prices.MARKET)
-    rets = prices.quarterly_returns(close, mkt, sorted(set(df["qidx"]) | {q + 1 for q in df["qidx"]}),
-                                    company.fy_end_month)
+    qs = sorted(set(df["qidx"]) | {q + 1 for q in df["qidx"]})
+    try:
+        close, mkt = prices.load(company.ticker), prices.load(prices.MARKET)
+        rets = prices.quarterly_returns(close, mkt, qs, company.fy_end_month)
+    except SystemExit:  # e.g. delisted, no free price history: test results only
+        print(f"{company.ticker}: no prices, skipping return tests")
+        rets = pd.DataFrame({"qidx": qs, "ret": np.nan, "mkt_ret": np.nan, "abn_ret": np.nan})
     for part in (review_signals(company, min_reviews), wiki.quarterly(company), filings.quarterly(company)):
         df = df.merge(part, on="qidx", how="left")
     df = df.merge(rets, on="qidx", how="left").sort_values("qidx").reset_index(drop=True)

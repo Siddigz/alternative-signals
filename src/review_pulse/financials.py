@@ -30,13 +30,18 @@ def _headers() -> dict:
     return {"User-Agent": ua, "Accept-Encoding": "gzip, deflate"}
 
 
+def company_cik(company: Company) -> int:
+    return int(company.cik) if company.cik else cik_for(company.ticker)
+
+
 def cik_for(ticker: str) -> int:
     r = requests.get("https://www.sec.gov/files/company_tickers.json", headers=_headers(), timeout=30)
     r.raise_for_status()
     for row in r.json().values():
         if row["ticker"].upper() == ticker.upper():
             return int(row["cik_str"])
-    raise SystemExit(f"Ticker {ticker} not found at SEC (it may have been delisted or renamed).")
+    raise SystemExit(f"Ticker {ticker} not found at SEC (it may have been delisted or renamed). "
+                     "Add its SEC CIK to config/companies.yaml as `cik:`.")
 
 
 def company_facts(cik: int) -> dict:
@@ -89,7 +94,7 @@ def quarterly_series(facts: dict, concepts: list[str]) -> pd.DataFrame:
 
 
 def build(company: Company) -> pd.DataFrame:
-    facts = company_facts(cik_for(company.ticker))
+    facts = company_facts(company_cik(company))
     return from_facts(facts, company)
 
 
