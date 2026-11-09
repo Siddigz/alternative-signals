@@ -119,7 +119,8 @@ def permutation_p(x: np.ndarray, y: np.ndarray, groups: np.ndarray, n: int = 200
     return (hits + 1) / (n + 1)
 
 
-def test(panel: pd.DataFrame, signal: str, outcome: str) -> Result | None:
+def test(panel: pd.DataFrame, signal: str, outcome: str, n_perm: int = 2000) -> Result | None:
+    """Pooled test of one signal against one outcome. n_perm=0 skips the luck test (perm_p is NaN)."""
     x_col, sign = SIGNALS[signal]
     y_col = OUTCOMES[outcome]
     if x_col not in panel or y_col not in panel:
@@ -136,7 +137,8 @@ def test(panel: pd.DataFrame, signal: str, outcome: str) -> Result | None:
     X = np.column_stack([np.minimum(x, 0), np.maximum(x, 0), np.ones_like(x)])
     (s_neg, s_pos, _), *_ = np.linalg.lstsq(X, y, rcond=None)
     return Result(signal, outcome, len(d), float(rho),
-                  permutation_p(x, y, d["ticker"].to_numpy()), float(s_neg), float(s_pos))
+                  permutation_p(x, y, d["ticker"].to_numpy(), n_perm) if n_perm else np.nan,
+                  float(s_neg), float(s_pos))
 
 
 def run(panel: pd.DataFrame) -> pd.DataFrame:
@@ -149,6 +151,39 @@ def run(panel: pd.DataFrame) -> pd.DataFrame:
                 if r:
                     rows.append({"scope": name, **r.__dict__})
     return pd.DataFrame(rows)
+
+
+def robustness(panel: pd.DataFrame, signal: str, outcome: str, split_year: int = 2020) -> pd.DataFrame:
+    """Does a pooled result hold up? Re-run it on halves of the data and without each company.
+
+    Splits: two halves of the companies (alternating by ticker), quarters before / from `split_year`
+    (fiscal year), plus the range of correlations when any one company is left out and the share of
+    companies whose own correlation points the same way as the pooled one.
+    """
+    tickers = sorted(panel["ticker"].unique())
+    halves = {"companies, half A": tickers[0::2], "companies, half B": tickers[1::2]}
+    year = panel["qidx"] // 4
+    parts = {**{k: panel[panel["ticker"].isin(v)] for k, v in halves.items()},
+             f"fiscal years before {split_year}": panel[year < split_year],
+             f"fiscal years {split_year} on": panel[year >= split_year]}
+    rows = []
+    for name, sub in parts.items():
+        r = test(sub, signal, outcome)
+        if r:
+            rows.append({"check": name, "n": r.n, "rho": r.rho, "perm_p": r.perm_p})
+    loo = [r.rho for t in tickers if (r := test(panel[panel["ticker"] != t], signal, outcome, n_perm=0))]
+    own = [r.rho for t in tickers if (r := test(panel[panel["ticker"] == t], signal, outcome, n_perm=0))]
+    pooled = test(panel, signal, outcome, n_perm=0)
+    if loo:
+        rows.append({"check": f"leave one company out (lowest / highest of {len(loo)})",
+                     "n": pooled.n, "rho": min(loo), "perm_p": np.nan, "rho_high": max(loo)})
+    if own:
+        same = sum(np.sign(x) == np.sign(pooled.rho) for x in own)
+        rows.append({"check": f"companies pointing the same way: {same} of {len(own)}",
+                     "n": pooled.n, "rho": np.nan, "perm_p": np.nan})
+    out = pd.DataFrame(rows)
+    out.insert(0, "test", f"{signal} vs {outcome}")
+    return out
 
 
 def describe(rho: float, perm_p: float) -> str:

@@ -7,7 +7,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-from .analysis import SIGNALS, verdict
+from .analysis import SIGNALS, robustness, verdict
 from .config import REPORTS
 
 BLUE, AQUA, GRAY = "#2a78d6", "#1baf7a", "#8a8984"
@@ -75,6 +75,18 @@ def results_table(results: pd.DataFrame) -> str:
     return t.to_html(index=False, float_format=lambda v: f"{v:+.3f}", classes="results", border=0)
 
 
+def robustness_table(panel: pd.DataFrame, results: pd.DataFrame) -> str:
+    """Splits and leave-one-out checks for every pooled result with p < 0.05."""
+    pooled = results[(results["scope"] == "All companies") & (results["perm_p"] < 0.05)]
+    if pooled.empty:
+        return "<p class='muted'>No pooled result below p=0.05, so nothing to check.</p>"
+    t = pd.concat([robustness(panel, r.signal, r.outcome) for r in pooled.itertuples()], ignore_index=True)
+    t = t.reindex(columns=["test", "check", "n", "rho", "rho_high", "perm_p"]).rename(columns={
+        "test": "Pooled result", "check": "Check", "n": "Quarters", "rho": "Correlation (aligned)",
+        "rho_high": "Highest", "perm_p": "Luck p-value"})
+    return t.to_html(index=False, float_format=lambda v: f"{v:+.3f}", classes="results", border=0, na_rep="")
+
+
 def write(panel: pd.DataFrame, results: pd.DataFrame, names: dict[str, str]) -> str:
     REPORTS.mkdir(parents=True, exist_ok=True)
     parts = [scatter_figure(panel).to_html(full_html=False, include_plotlyjs="cdn")]
@@ -105,6 +117,10 @@ SEC EDGAR, Yahoo Finance. Research only, not investment advice.</p>
 quarters within each company 2,000 times; below 0.05 means a link this strong rarely appears by chance. Each
 company's own average is removed first. Review data stops in 2023; Wikipedia and filings run to the latest quarter.</p>
 <div class="chart">{parts[0]}</div>
+<h2>Do the pooled results hold up?</h2>
+<p class="muted">Each pooled result below p=0.05 is re-run on half the companies, on earlier and later years,
+and with each company left out. A real effect should show up, with the same sign, in every split.</p>
+<div class="wrap">{robustness_table(panel, results)}</div>
 <h2>All results</h2><div class="wrap">{results_table(results)}</div>
 <h2>By company</h2>
 {''.join(f'<div class="chart">{p}</div>' for p in parts[1:])}

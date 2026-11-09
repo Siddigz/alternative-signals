@@ -76,3 +76,186 @@ companies:
     stores: [Traeger, Traeger Grills]
     categories: [Patio_Lawn_and_Garden]
     wiki: [Traeger]
+
+  # --- Wider test (added 2026-11-09). Store names checked against the dataset's product files.
+
+  GRMN:
+    name: Garmin
+    fy_end_month: 12
+    stores: [Garmin]
+    categories: [Electronics, Sports_and_Outdoors]
+    wiki: [Garmin]
+
+  TBCH:
+    name: Turtle Beach
+    fy_end_month: 12  # ticker was HEAR until 2025
+    stores: [Turtle Beach]
+    categories: [Video_Games, Electronics]
+    wiki: [Turtle Beach Corporation]
+
+  NTGR:
+    name: Netgear
+    fy_end_month: 12
+    stores: [NETGEAR]
+    categories: [Electronics]
+    wiki: [Netgear]
+
+  ARLO:
+    name: Arlo Technologies
+    fy_end_month: 12
+    stores: [Arlo]
+    categories: [Electronics]
+    wiki: [Arlo Technologies]
+
+  KOSS:
+    name: Koss
+    fy_end_month: 6
+    stores: [Koss]
+    categories: [Electronics]
+    wiki: [Koss Corporation]
+
+  HBB:
+    name: Hamilton Beach Brands
+    fy_end_month: 12
+    stores: [Hamilton Beach, Hamilton Beach Commercial, Hamilton Beach Professional, Proctor Silex]
+    categories: [Home_and_Kitchen]
+    wiki: [Hamilton Beach Brands]
+
+  LCUT:
+    name: Lifetime Brands
+    fy_end_month: 12
+    stores: [Farberware, Mikasa, Gourmet Basics by Mikasa, Pfaltzgraff, Kamenstein, Lifetime Brands,
+             Taylor Precision Products, S'well]
+    categories: [Home_and_Kitchen]
+    wiki: [Lifetime Brands]
+
+  TUP:
+    name: Tupperware
+    fy_end_month: 12
+    cik: 1008654  # delisted after its 2024 bankruptcy
+    stores: [Tupperware, New Tupperware]
+    categories: [Home_and_Kitchen]
+    wiki: [Tupperware Brands]
+
+  NPK:
+    name: National Presto Industries
+    fy_end_month: 12
+    stores: [Presto]
+    categories: [Home_and_Kitchen]
+    wiki: [National Presto Industries]
+
+  CLX:
+    name: Clorox
+    fy_end_month: 6
+    stores: [Clorox, CloroxPro, Clorox 2, Brita, Burt's Bees, Glad, Kingsford, Fresh Step, Pine-Sol,
+             Liquid-Plumr, Rainbow Light, Natural Vitality]
+    categories: [Health_and_Household, Home_and_Kitchen, Beauty_and_Personal_Care, Pet_Supplies, Patio_Lawn_and_Garden]
+    wiki: [Clorox, Burt's Bees]
+
+  ELF:
+    name: e.l.f. Beauty
+    fy_end_month: 3
+    stores: [e.l.f., e.l.f. Cosmetics]
+    categories: [Beauty_and_Personal_Care]
+    wiki: [E.l.f. Cosmetics]
+
+  COTY:
+    name: Coty
+    fy_end_month: 6
+    stores: [COVERGIRL, Rimmel, Rimmel London, Sally Hansen, Max Factor]
+    categories: [Beauty_and_Personal_Care]
+    wiki: [Coty Inc.]
+
+  EPC:
+    name: Edgewell Personal Care
+    fy_end_month: 9
+    stores: [Schick, Schick Hydro Silk, Banana Boat, Hawaiian Tropic, Playtex, Wet Ones, Skintimate, Cremo, Carefree]
+    categories: [Beauty_and_Personal_Care, Health_and_Household]
+    wiki: [Edgewell Personal Care]
+
+  ENR:
+    name: Energizer Holdings
+    fy_end_month: 9
+    stores: [Energizer, Energizer Batteries, Eveready]
+    categories: [Health_and_Household, Electronics]
+    wiki: [Energizer Holdings]
+
+  CHD:
+    name: Church & Dwight
+    fy_end_month: 12
+    stores: [Arm & Hammer, OxiClean, Waterpik, TROJAN, Batiste, Vitafusion, Orajel, Nair, Spinbrush, Zicam]
+    categories: [Health_and_Household, Beauty_and_Personal_Care, Pet_Supplies]
+    wiki: [Church & Dwight]
+
+  PBH:
+    name: Prestige Consumer Healthcare
+    fy_end_month: 3
+    stores: [Dramamine, Clear Eyes, Monistat, Summer's Eve, Chloraseptic, Compound W, Debrox, Beano,
+             Boudreaux's Butt Paste, Fleet, Ludens, Dermoplast]
+    categories: [Health_and_Household, Baby_Products]
+    wiki: [Prestige Consumer Healthcare]
+
+  JOUT:
+    name: Johnson Outdoors
+    fy_end_month: 9
+    stores: [Minn Kota, Humminbird, Eureka!, Jetboil, Old Town, Old Town Canoe, Ocean Kayak, Scubapro, SCUBAPRO]
+    categories: [Sports_and_Outdoors, Electronics]
+    wiki: [Johnson Outdoors]
+
+  CLAR:
+    name: Clarus
+    fy_end_month: 12
+    stores: [Black Diamond, PIEPS]
+    categories: [Sports_and_Outdoors]
+    wiki: [Black Diamond Equipment]
+
+  HAS:
+    name: Hasbro
+    fy_end_month: 12
+    stores: [Hasbro, Hasbro Gaming, NERF, Play-Doh, Playskool, Transformers, My Little Pony, MONOPOLY,
+             Wizards of the Coast]
+    categories: [Toys_and_Games]
+    wiki: [Hasbro]
+
+  MAT:
+    name: Mattel
+    fy_end_month: 12
+    stores: [Mattel, Mattel Games, WWE MATTEL, Fisher-Price, Fisher Price, Barbie, Hot Wheels, Mega Bloks,
+             Mega Construx, American Girl, Thomas & Friends]
+    categories: [Toys_and_Games, Baby_Products]
+    wiki: [Mattel]
+
+  JAKK:
+    name: Jakks Pacific
+    fy_end_month: 12
+    stores: [Jakks Pacific, Jakks, Jakks Pacific Inc, Disguise]
+    categories: [Toys_and_Games]
+    wiki: [Jakks Pacific]
+
+  FNKO:
+    name: Funko
+    fy_end_month: 12
+    stores: [Funko, Loungefly]
+    categories: [Toys_and_Games, Arts_Crafts_and_Sewing]
+    wiki: [Funko]
+
+  CENT:
+    name: Central Garden & Pet
+    fy_end_month: 9
+    stores: [Nylabone, Kaytee, Four Paws, Aqueon, Zilla, Farnam, Pennington, Pennington Seed, Amdro, Sevin]
+    categories: [Pet_Supplies, Patio_Lawn_and_Garden]
+    wiki: [Central Garden & Pet]
+
+  SMG:
+    name: Scotts Miracle-Gro
+    fy_end_month: 9
+    stores: [Miracle-Gro, Scotts, Ortho, Roundup, Tomcat, Earthgro, The Scotts Miracle-Gro Company]
+    categories: [Patio_Lawn_and_Garden]
+    wiki: [Scotts Miracle-Gro Company]
+
+  ACCO:
+    name: ACCO Brands
+    fy_end_month: 12
+    stores: [AT-A-GLANCE, Swingline, Five Star, Mead, Kensington, PowerA, Quartet, GBC, Wilson Jones]
+    categories: [Office_Products, Electronics, Video_Games]
+    wiki: [ACCO Brands]

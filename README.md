@@ -36,6 +36,10 @@ Research only. Not investment advice.
    We report rank correlation "aligned" to each signal's predicted direction (positive = the idea works),
    with each company's own average removed, separate slopes for tone drops and
    rises, and a permutation test: shuffle quarters 2,000 times to see how often luck gives a link this strong.
+8. **Robustness:** every pooled result below p=0.05 is re-run on each half of the companies, before and from
+   2020, and with each company left out. The report shows whether it holds in every split.
+
+Results so far are in [FINDINGS.md](FINDINGS.md).
 
 ## Setup
 

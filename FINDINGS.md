@@ -1,60 +1,97 @@
-# Findings — first backtest (2026-11-08)
-
-**Short answer: none of the three signals predicted sales or stock returns across these nine companies.**
-The video's claim, that a drop in Amazon review tone is followed by a miss, did not hold up here.
+# Findings
 
 Full charts and tables: `reports/report.html` (open it in a browser).
 
-## What was tested
+## Second backtest: 34 companies (2026-11-09)
 
-- **Companies (9):** Logitech, YETI, Helen of Troy, Newell Brands, iRobot, GoPro, Sonos, Corsair, Traeger.
-- **Period:** 2015 to Sep 2023 for reviews; Wikipedia and filings run to late 2026.
-- **Reviews:** about 2.7 million collected, with about 260,000 scored by the tone model (up to 1,000 per company per quarter).
-- **Results:** quarterly revenue from SEC EDGAR. Stock returns are measured against the S&P 500.
-- **iRobot:** delisted in 2025 and has no free price history, so it is tested on sales only.
+**Short answer: review tone, Wikipedia views and filing wording still predict nothing. One weak lead turned
+up: a rise in a brand's average Amazon star rating came before a slightly better stock return the next
+quarter. It appears only in 2020–2023, so it is not something to trade on.**
 
-## Pooled results (all companies)
+### What was tested
 
-"Correlation" is aligned with the idea, so positive means the signal worked as predicted. "p" is the chance
-of a link at least this strong appearing by luck.
+- **Companies (34):** the first nine plus 25 more consumer-brand firms:
+  - **Electronics:** Garmin, Turtle Beach, Netgear, Arlo, Koss
+  - **Home:** Hamilton Beach, Lifetime Brands, Tupperware, National Presto
+  - **Household and beauty:** Clorox, e.l.f., Coty, Edgewell, Energizer, Church & Dwight, Prestige Consumer Healthcare
+  - **Outdoor:** Johnson Outdoors, Clarus
+  - **Toys:** Hasbro, Mattel, Jakks Pacific, Funko
+  - **Garden and pet:** Central Garden & Pet, Scotts Miracle-Gro
+  - **Office:** ACCO Brands
+- **Reviews:** about 7 million collected, with about 1,000 per company per quarter scored for tone.
+- **Coverage:** roughly 900–1,400 company-quarters per test, five times the first run.
+- **Data gaps:**
+  - Tupperware and iRobot are delisted with no free price history, so they get sales tests only.
+  - Lifetime Brands and Central Garden have too little Wikipedia history for that signal.
+- **Dropped:** Peloton (14 products in the dataset) and Purple (no matching store).
+
+### Pooled results
+
+Positive correlation = the signal worked in the direction the idea predicts. "p" = chance of a link this
+strong from luck alone.
 
 | Signal | Same-quarter sales | Next-quarter sales | Next-quarter return |
 |---|---|---|---|
-| Review tone change | −0.04 (p=0.56) | −0.01 (p=0.85) | +0.06 (p=0.41) |
-| Star rating change | −0.02 (p=0.80) | −0.03 (p=0.65) | +0.09 (p=0.23) |
-| Wikipedia views vs last year | +0.04 (p=0.53) | −0.04 (p=0.49) | −0.01 (p=0.89) |
-| Filing negative wording vs last year | −0.15 (p=0.01) | −0.06 (p=0.27) | −0.04 (p=0.56) |
+| Review tone change | +0.00 (p=0.97) | −0.04 (p=0.19) | +0.06 (p=0.06) |
+| Star rating change | +0.03 (p=0.32) | −0.03 (p=0.32) | **+0.10 (p=0.006)** |
+| Wikipedia views vs last year | +0.03 (p=0.24) | +0.00 (p=0.94) | +0.02 (p=0.44) |
+| Filing negative wording vs last year | −0.14 (p<0.001) | −0.12 (p=0.001) | −0.05 (p=0.06) |
 
-Each cell uses 185–317 company-quarters.
+### The star-rating lead
 
-- **Review tone:** no link with anything.
-- **Wikipedia:** Logitech's earlier "moderate link" (+0.36) disappeared once all nine companies were included.
-  It looks like luck.
-- **Filing wording:** the one pooled result below p=0.05 goes the *wrong* way. Gloomier filings came before
-  *better* sales growth. The likely reason is that the sales measure snaps back: after a bad stretch, filings
-  sound negative and growth rebounds. It is not a usable signal.
+Quarters where a brand's average star rating rose, compared with its own norm, were followed by better stock
+returns against the S&P 500.
 
-## Per-company results
+- **Size:** the bottom 40% of rating changes averaged about −4% the next quarter; the top 60% averaged about +2.5%.
+- **What holds up:**
+  - Both halves of the companies show it: +0.10 and +0.09.
+  - The first nine companies (+0.09) and the 25 new ones (+0.10) agree, which is close to a fresh replication.
+  - Leaving out any single company keeps it between +0.09 and +0.11.
+  - 20 of 31 companies point the same way.
+- **What doesn't:**
+  - **Time:** it is zero before 2020 (+0.02, p=0.63) and comes entirely from fiscal 2020–2023 (+0.18).
+    That period includes COVID's shifts in online shopping, and the dataset thins out near its 2023 end.
+  - **Many tests:** 12 pooled tests were run. Demanding p<0.004 to allow for that, it just misses.
+  - **Tone:** the tone model agrees less: +0.06, p=0.06.
+- **Read it as:** a lead worth checking on newer data, not a proven signal. The dataset stops in 2023,
+  so testing 2024 onward needs a fresh review source.
 
-8 of 98 per-company tests came in below p=0.05. About 5 would by chance alone, and 3 of the 8 point the
-opposite way from the idea. They are best read as noise.
+### Filing wording: a built-in result, not a forecast
+
+Gloomier filings come before *better* sales growth. This holds in every split and in 32 of 34 companies,
+which points to something built into the measure rather than a market effect:
+
+- A filing made in quarter t describes quarter t−1. Its gloomy wording tracks weak growth in t−1 (correlation −0.28).
+- The sales measure, change in growth, subtracts t−1's growth. A weak t−1 therefore makes it look like a rebound.
+
+The wording describes the past. It doesn't predict anything.
+
+### Per-company results
+
+34 of 388 per-company tests came in below p=0.05, against about 19 expected by luck. 24 of those 34 point the
+wrong way, mostly the built-in filing effect above. The rest are best read as noise.
+
+## First backtest: 9 companies (2026-11-08)
+
+- **Companies:** Logitech, YETI, Helen of Troy, Newell Brands, iRobot, GoPro, Sonos, Corsair, Traeger.
+- **Result:** nothing predicted sales or returns.
+- **Wikipedia:** Logitech's +0.36 link with Wikipedia views vanished once the other companies were added.
+- **Star rating:** this run's +0.09 for star rating vs next return (p=0.23) was too small to detect with 185 quarters.
 
 ## Checks that the pipeline works
 
-- Tone scores agree with the star ratings reviewers gave (rank correlation 0.79 over 261,626 reviews), so the
-  model reads tone correctly.
+- Tone scores agree with the star ratings reviewers gave (rank correlation 0.79 over 261,626 reviews).
 - EDGAR revenue matches published figures (e.g. Logitech FY2026 Q4: $1.09B, +7%).
-- 15 unit tests pass, including one with a planted signal that the analysis detects.
+- 16 unit tests pass, including planted signals that the analysis and the robustness checks detect.
 
 ## Why this may differ from the study
 
 - The study measured surprises against **analyst estimates**. Those aren't free, so we used the change in
-  revenue growth as a stand-in, which is noisier.
-- The study covered many more firms. Nine companies over about 30 quarters can only detect fairly strong effects.
+  revenue growth as a stand-in. That stand-in also causes the built-in filing-wording result.
 - Amazon reviews are only part of each company's sales.
 
 ## Possible next steps
 
-1. Widen to 30+ companies to detect smaller effects.
-2. Use an earnings-surprise measure, if a free source of past analyst estimates can be found.
-3. Try other free signals (Google Trends, job postings) through the same tests.
+1. Test the star-rating lead on 2024+ data from a fresh review source. That is the only out-of-sample check left.
+2. Replace the sales measure with one that doesn't subtract last quarter, such as growth vs the same quarter last year.
+3. Use an earnings-surprise measure, if a free source of past analyst estimates can be found.

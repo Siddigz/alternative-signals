@@ -73,3 +73,17 @@ def test_drop_partial_quarters_trims_tail_only():
     q = pd.DataFrame({"qidx": range(8), "reviews": [100, 20, 110, 105, 98, 102, 40, 9]})
     out = analysis.drop_partial_quarters(q)
     assert out["qidx"].tolist() == [0, 1, 2, 3, 4, 5]
+
+
+def test_robustness_planted_signal_holds_in_every_split():
+    rng = np.random.default_rng(2)
+    rows = []
+    for t in ("A", "B", "C", "D"):
+        for i in range(40):  # qidx spans fiscal years 2017-2026
+            x = rng.normal(0, 0.1)
+            rows.append({"ticker": t, "qidx": 2017 * 4 + i, "d_tone": x,
+                         "abn_ret_next": 0.5 * x + rng.normal(0, 0.02)})
+    out = analysis.robustness(pd.DataFrame(rows), "tone", "next-quarter return")
+    splits = out[out["perm_p"].notna()]
+    assert len(splits) == 4 and (splits["rho"] > 0.7).all()
+    assert out["check"].str.contains("4 of 4").any()
