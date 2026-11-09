@@ -1,6 +1,10 @@
 # review-pulse
 
-Does the tone of a brand's Amazon reviews predict the company's results and stock returns?
+Do free "alternative data" signals predict a company's results and stock returns? Three signals are tested:
+
+- **Review tone:** how positive the words in a brand's Amazon reviews are
+- **Wikipedia interest:** pageviews of the company's and brands' articles
+- **Filing wording:** how often negative and uncertainty words appear in its 10-K and 10-Q filings
 
 A University of Michigan study found that the tone of online product reviews predicts quarterly earnings
 surprises and abnormal stock returns, and that negative tone matters more. This project tests that idea on
@@ -19,12 +23,18 @@ Research only. Not investment advice.
    Free analyst estimates don't exist, so "surprise" is approximated by the change in year-over-year
    revenue growth.
 4. **Returns:** prices from Yahoo Finance. Abnormal return = stock return minus SPY's return.
-5. **Tests:** for each quarter, does the change in tone predict:
+5. **Wikipedia:** monthly human pageviews from the Wikimedia API (from July 2015), summed per quarter and
+   compared with the same quarter a year earlier.
+6. **Filing wording:** each 10-K and 10-Q is downloaded from EDGAR and scored for negative words (decline,
+   impairment, headwinds, ...) and uncertainty words per 1,000 words. A filing counts in the quarter it was
+   filed and is compared with the same filing type a year earlier.
+7. **Tests:** for each quarter, does each signal predict:
    - that quarter's results (announced about a month after the quarter ends)
    - next quarter's results
    - next quarter's abnormal return?
 
-   We report rank correlation with each company's own average removed, separate slopes for tone drops and
+   We report rank correlation "aligned" to each signal's predicted direction (positive = the idea works),
+   with each company's own average removed, separate slopes for tone drops and
    rises, and a permutation test: shuffle quarters 2,000 times to see how often luck gives a link this strong.
 
 ## Setup
@@ -58,7 +68,8 @@ names and dataset categories.
 
 ## Limits
 
-- Only reviews up to about Sep 2023. Recent quarters need another source.
+- Only reviews up to about Sep 2023. Recent quarters need another source. Wikipedia and filings run to today.
+- Many tests are run (3 signals x 3 outcomes x every company), so a few will look significant by chance.
 - Revenue-growth change is a rough stand-in for an earnings surprise against analyst estimates.
 - Quarter boundaries use calendar months, so 52/53-week fiscal years are off by a few days.
 - One company's Amazon reviews cover only part of its sales.
