@@ -27,6 +27,8 @@ def period_return(close: pd.Series, start, end) -> float | None:
     upto = close[close.index <= pd.Timestamp(end)]
     if before.empty or upto.empty or upto.index[-1] < pd.Timestamp(start):
         return None
+    if close.index[-1] < pd.Timestamp(end) - pd.Timedelta(days=5):  # quarter not finished yet
+        return None
     return float(upto.iloc[-1] / before.iloc[-1] - 1)
 
 
@@ -45,10 +47,10 @@ def quarterly_returns(close: pd.Series, market: pd.Series, qidxs: list[int],
 
 def fetch(company: Company, start: str, end: str) -> None:
     PRICES.mkdir(parents=True, exist_ok=True)
-    # Pad the window: returns need the close before each quarter, and next-quarter returns
-    # run past the review window.
+    # Start early (returns need the close before each quarter) and run to today, since the
+    # Wikipedia and filing signals continue past the review data.
     s = (pd.Timestamp(start) - pd.DateOffset(months=15)).strftime("%Y-%m-%d")
-    e = (pd.Timestamp(end) + pd.DateOffset(months=9)).strftime("%Y-%m-%d")
+    e = pd.Timestamp.today().strftime("%Y-%m-%d")
     for t in (company.ticker, MARKET):
         path = PRICES / f"{t}.parquet"
         download(t, s, e).to_frame("close").to_parquet(path)

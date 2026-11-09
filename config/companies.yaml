@@ -4,6 +4,7 @@
 # fy_end_month:  month the fiscal year ends (1-12). 52/53-week years are treated as month-end.
 # stores:        Amazon "store" names (brand pages) that belong to the company, matched case-insensitively.
 # categories:    Amazon Reviews 2023 categories to search for those stores.
+# wiki:          English Wikipedia article titles for the company and its main brands.
 #
 # The dataset ends around Sep 2023, so the test window is roughly 2015-2023.
 
@@ -17,51 +18,60 @@ companies:
     fy_end_month: 3
     stores: [Logitech, Logitech G, Logitech Gaming, Ultimate Ears, Astro Gaming, Blue, Blue Microphones, Jaybird]
     categories: [Electronics, Video_Games]
+    wiki: [Logitech]
 
   YETI:
     name: YETI
     fy_end_month: 12
     stores: [YETI]
     categories: [Sports_and_Outdoors, Home_and_Kitchen]
+    wiki: [Yeti Holdings]
 
   HELE:
     name: Helen of Troy
     fy_end_month: 2
     stores: [OXO, Hydro Flask, Osprey, Osprey Packs, Vicks, PUR, Drybar, Hot Tools, Revlon]
     categories: [Home_and_Kitchen, Sports_and_Outdoors, Beauty_and_Personal_Care, Health_and_Household]
+    wiki: [Helen of Troy Limited, Hydro Flask]
 
   NWL:
     name: Newell Brands
     fy_end_month: 12
     stores: [Rubbermaid, Sharpie, Coleman, Graco, Yankee Candle, Oster, Sunbeam, Crock-Pot, Mr. Coffee, Paper Mate, Elmer's, FoodSaver, Contigo]
     categories: [Home_and_Kitchen, Office_Products, Sports_and_Outdoors, Baby_Products, Arts_Crafts_and_Sewing]
+    wiki: [Newell Brands, Rubbermaid]
 
   IRBT:
     name: iRobot
     fy_end_month: 12
     stores: [iRobot]
     categories: [Home_and_Kitchen]
+    wiki: [iRobot, Roomba]
 
   GPRO:
     name: GoPro
     fy_end_month: 12
     stores: [GoPro]
     categories: [Electronics]
+    wiki: [GoPro]
 
   SONO:
     name: Sonos
     fy_end_month: 9
     stores: [Sonos]
     categories: [Electronics]
+    wiki: [Sonos]
 
   CRSR:
     name: Corsair Gaming
     fy_end_month: 12
     stores: [Corsair, Elgato, SCUF Gaming, SCUF]
     categories: [Electronics, Video_Games]
+    wiki: [Corsair Gaming]
 
   COOK:
     name: Traeger
     fy_end_month: 12
     stores: [Traeger, Traeger Grills]
     categories: [Patio_Lawn_and_Garden]
+    wiki: [Traeger]

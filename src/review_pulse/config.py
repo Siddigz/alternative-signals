@@ -23,6 +23,7 @@ class Company:
     fy_end_month: int
     stores: list[str]
     categories: list[str]
+    wiki: list[str] = field(default_factory=list)  # Wikipedia article titles
     store_keys: set[str] = field(init=False)
 
     def __post_init__(self):
@@ -44,7 +45,8 @@ def load_config(path: Path = CONFIG_FILE) -> Config:
     raw = yaml.safe_load(path.read_text(encoding="utf-8"))
     companies = {
         t: Company(ticker=t, name=c["name"], fy_end_month=int(c["fy_end_month"]),
-                   stores=list(c["stores"]), categories=list(c["categories"]))
+                   stores=list(c["stores"]), categories=list(c["categories"]),
+                   wiki=list(c.get("wiki", [])))
         for t, c in raw["companies"].items()
     }
     return Config(start=raw["window"]["start"], end=raw["window"]["end"], companies=companies)
