@@ -239,7 +239,7 @@ def robustness(panel: pd.DataFrame, signal: str, outcome: str, split_year: int =
 
 def describe(rho: float, perm_p: float, q: float | None = None) -> str:
     strength = abs(rho)
-    size = "no" if strength < 0.1 else "a weak" if strength < 0.25 else "a moderate" if strength < 0.5 else "a strong"
+    size = ("no" if strength < 0.05 else "a very weak" if strength < 0.1 else "a weak" if strength < 0.25 else "a moderate" if strength < 0.5 else "a strong")
     direction = "" if size == "no" else (" link in the predicted direction" if rho > 0
                                          else " link in the OPPOSITE direction")
     if q is not None and not np.isnan(q):

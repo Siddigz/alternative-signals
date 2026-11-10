@@ -49,7 +49,7 @@ def latest_reading(company: Company, name: str) -> dict:
         return {"value": np.nan, "quarter": "", "pct": np.nan}
     q = q.sort_values("qidx")
     v = float(q[col].iloc[-1])
-    pct = float((q[col] <= v).mean())
+    pct = float((q[col] < v).mean() + 0.5 * (q[col] == v).mean())  # ties count half
     fy, fq = divmod(int(q["qidx"].iloc[-1]), 4)
     return {"value": v, "quarter": label(fy, fq + 1), "pct": pct}
 

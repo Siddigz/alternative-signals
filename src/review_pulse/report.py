@@ -7,19 +7,22 @@ import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-from .analysis import SIGNALS, robustness, verdict
+from .analysis import OUTCOMES, SIGNALS, robustness, verdict
 from .config import REPORTS
 
 BLUE, AQUA, GRAY = "#2a78d6", "#1baf7a", "#8a8984"
+ORANGE, NEUTRAL = "#d4572a", "#efeeea"  # diverging poles: blue = predicted direction, orange = opposite
 LAYOUT = dict(template="plotly_white", font=dict(family="system-ui, sans-serif", size=12, color="#0b0b0b"),
               margin=dict(l=60, r=20, t=50, b=40), hovermode="x unified", showlegend=False)
 
 PANELS = [  # column, title, color, y format, hover label
     ("tone", "Average review tone (−2 to +2)", BLUE, ".2f", "Tone"),
     ("wiki_views", "Wikipedia views per quarter", BLUE, "~s", "Views"),
-    ("neg_rate", "Negative words per 1,000 in filings", BLUE, ".1f", "Negative words"),
+    ("trends", "Google search interest per quarter (relative)", BLUE, "~s", "Search interest"),
+    ("short_dtc", "Short interest (days to cover)", BLUE, ".1f", "Days to cover"),
     ("rev_yoy", "Revenue growth vs. same quarter last year", AQUA, ".0%", "Revenue growth"),
-    ("abn_ret", "Stock return minus S&P 500 (SPY)", AQUA, ".0%", "Abnormal return"),
+    ("earn_ret", "Stock move on results day, minus SPY", AQUA, ".0%", "Earnings-day move"),
+    ("abn_ret", "Stock return minus S&P 500 (SPY) over the quarter", AQUA, ".0%", "Abnormal return"),
 ]
 
 
@@ -30,7 +33,7 @@ def company_figure(df: pd.DataFrame, name: str) -> go.Figure:
     x = df["quarter"]
     for row, (col, _, color, fmt, label) in enumerate(panels, start=1):
         hover = f"{label} %{{y:{fmt}}}<extra></extra>"
-        if col == "abn_ret":
+        if col in ("abn_ret", "earn_ret"):
             trace = go.Bar(x=x, y=df[col], marker=dict(color=color), hovertemplate=hover)
         else:
             trace = go.Scatter(x=x, y=df[col], mode="lines+markers", line=dict(color=color, width=2),
@@ -42,36 +45,32 @@ def company_figure(df: pd.DataFrame, name: str) -> go.Figure:
     return fig
 
 
-SCATTERS = [("tone", "Review tone change"), ("wikipedia", "Wikipedia views vs. a year earlier (log)"),
-            ("filing words", "Filing negative-word rate vs. a year earlier")]
-
-
-def scatter_figure(panel: pd.DataFrame) -> go.Figure:
-    fig = make_subplots(rows=1, cols=3, shared_yaxes=True, horizontal_spacing=0.04,
-                        subplot_titles=[t for _, t in SCATTERS])
-    for i, (signal, _) in enumerate(SCATTERS, start=1):
-        col = SIGNALS[signal][0]
-        d = panel.dropna(subset=[col, "abn_ret_next"]) if col in panel else panel.iloc[0:0]
-        fig.add_trace(go.Scatter(
-            x=d[col] if len(d) else [], y=d["abn_ret_next"] if len(d) else [], mode="markers",
-            marker=dict(size=8, color=BLUE, opacity=0.7, line=dict(color="#fcfcfb", width=2)),
-            customdata=d[["ticker", "quarter"]] if len(d) else None,
-            hovertemplate="%{customdata[0]} %{customdata[1]}<br>Signal %{x:+.2f}"
-                          "<br>Next-quarter abnormal return %{y:.1%}<extra></extra>"), row=1, col=i)
-        fig.add_hline(y=0, line=dict(color=GRAY, width=1), row=1, col=i)
-        fig.add_vline(x=0, line=dict(color=GRAY, width=1), row=1, col=i)
-    fig.update_yaxes(tickformat=".0%", title_text="Next-quarter return minus SPY", row=1, col=1)
-    fig.update_layout(**{**LAYOUT, "hovermode": "closest"}, height=420,
-                      title=dict(text="Each signal vs. the stock's return the next quarter", x=0))
-    fig.update_annotations(font=dict(size=12, color="#52514e"))
+def grid_figure(results: pd.DataFrame) -> go.Figure:
+    """Pooled correlation for every signal (rows) and outcome (columns), labelled with its q-value."""
+    pooled = results[results["scope"] == "All companies"].set_index(["signal", "outcome"])
+    sig, out = list(SIGNALS), list(OUTCOMES)
+    z = [[pooled["rho"].get((s, o), None) for o in out] for s in sig]
+    q = pooled["q_value"] if "q_value" in pooled else pooled["perm_p"]
+    text = [[("" if z[i][j] is None else f"{z[i][j]:+.2f}<br>q={q.get((s, o)):.2f}") for j, o in enumerate(out)]
+            for i, s in enumerate(sig)]
+    lim = max(0.15, max(abs(v) for row in z for v in row if v is not None))
+    fig = go.Figure(go.Heatmap(
+        z=z, x=[o.capitalize() for o in out], y=[s.capitalize() for s in sig], text=text, texttemplate="%{text}",
+        zmin=-lim, zmax=lim, colorscale=[[0, ORANGE], [0.5, NEUTRAL], [1, BLUE]], xgap=2, ygap=2,
+        colorbar=dict(title="Correlation", tickformat="+.2f"),
+        hovertemplate="%{y} vs %{x}<br>Correlation %{z:+.3f}<extra></extra>"))
+    fig.update_layout(**{**LAYOUT, "hovermode": "closest"}, height=90 + 56 * len(sig),
+                      title=dict(text="Pooled results: blue = worked as predicted, orange = opposite. "
+                                      "q below 0.05 survives the many-tests correction.", x=0, font=dict(size=14)))
+    fig.update_yaxes(autorange="reversed")
     return fig
 
 
 def results_table(results: pd.DataFrame) -> str:
     cols = {"scope": "Scope", "signal": "Signal", "outcome": "Outcome", "n": "Quarters",
-            "rho": "Correlation (aligned)", "perm_p": "Luck p-value",
+            "rho": "Correlation (aligned)", "perm_p": "Luck p-value", "q_value": "q (many-tests adjusted)",
             "slope_neg": "Slope when signal worsens", "slope_pos": "Slope when signal improves"}
-    t = results[list(cols)].rename(columns=cols)
+    t = results[[c for c in cols if c in results]].rename(columns=cols)
     return t.to_html(index=False, float_format=lambda v: f"{v:+.3f}", classes="results", border=0)
 
 
@@ -89,7 +88,7 @@ def robustness_table(panel: pd.DataFrame, results: pd.DataFrame) -> str:
 
 def write(panel: pd.DataFrame, results: pd.DataFrame, names: dict[str, str]) -> str:
     REPORTS.mkdir(parents=True, exist_ok=True)
-    parts = [scatter_figure(panel).to_html(full_html=False, include_plotlyjs="cdn")]
+    parts = [grid_figure(results).to_html(full_html=False, include_plotlyjs="cdn")]
     for ticker, df in panel.groupby("ticker"):
         parts.append(company_figure(df, f"{names.get(ticker, ticker)} ({ticker})")
                      .to_html(full_html=False, include_plotlyjs=False))
@@ -108,14 +107,16 @@ def write(panel: pd.DataFrame, results: pd.DataFrame, names: dict[str, str]) -> 
   table.results th, table.results td {{ text-align:left; padding:4px 8px; border-bottom:1px solid var(--line); }}
   .wrap {{ overflow-x:auto; }}
 </style></head><body><main>
-<h1>Do review tone, Wikipedia interest and filing wording predict results?</h1>
+<h1>Do free alternative-data signals predict results and returns?</h1>
 <p class="muted">Generated {date.today():%Y-%m-%d}. Sources: Amazon Reviews 2023 (McAuley Lab), Wikimedia pageviews,
 SEC EDGAR, Yahoo Finance. Research only, not investment advice.</p>
 <h2>Verdict (all companies pooled)</h2><ul>{summary}</ul>
 <p class="muted">Correlations are "aligned": positive means the signal moved in the direction the idea predicts
-(better tone, more interest or calmer filing wording before better outcomes). "Luck p-value" comes from shuffling
-quarters within each company 2,000 times; below 0.05 means a link this strong rarely appears by chance. Each
-company's own average is removed first. Review data stops in 2023; Wikipedia and filings run to the latest quarter.</p>
+(for example better tone, more insider buying or less short selling before better outcomes). "Luck p-value"
+comes from shuffling quarters within each company 2,000 times; "q" adjusts it for the number of tests run, and
+below 0.05 counts as a finding. Each company's own average is removed first. Sales surprise = revenue growth vs
+a year earlier, minus what last quarter's growth predicted. Earnings-day move = the stock vs SPY around the results
+announcement. Review data stops in 2023; the other signals run to the latest quarter.</p>
 <div class="chart">{parts[0]}</div>
 <h2>Do the pooled results hold up?</h2>
 <p class="muted">Each pooled result below p=0.05 is re-run on half the companies, on earlier and later years,

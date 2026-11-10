@@ -90,7 +90,7 @@ names and dataset categories.
 ## Limits
 
 - Only reviews up to about Sep 2023. Recent quarters need another source. Wikipedia and filings run to today.
-- Many tests are run (3 signals x 3 outcomes x every company), so a few will look significant by chance.
+- Many tests are run (7 signals x 4 outcomes x every company), so a few will look significant by chance; q-values allow for this.
 - The sales surprise and earnings-day move are stand-ins for a surprise against analyst estimates.
 - The halal screen is a research aid, not a ruling. Confirm with a scholar or a screening service.
 - Quarter boundaries use calendar months, so 52/53-week fiscal years are off by a few days.
