@@ -1,14 +1,18 @@
 # review-pulse
 
-Do free "alternative data" signals predict a company's results and stock returns? Three signals are tested:
+Do free "alternative data" signals predict a company's results and stock returns? Seven signals are tested:
 
-- **Review tone:** how positive the words in a brand's Amazon reviews are
+- **Review tone and star rating:** how positive a brand's Amazon reviews are (to 2023)
 - **Wikipedia interest:** pageviews of the company's and brands' articles
+- **Google search interest:** Google Trends for the main brand names
 - **Filing wording:** how often negative and uncertainty words appear in its 10-K and 10-Q filings
+- **Insider buying:** open-market buys and sells by directors and officers (SEC Form 4)
+- **Short interest:** how heavily traders are betting against the stock (FINRA)
 
 A University of Michigan study found that the tone of online product reviews predicts quarterly earnings
-surprises and abnormal stock returns, and that negative tone matters more. This project tests that idea on
-past data, for consumer-product companies that sell heavily on Amazon.
+surprises and abnormal stock returns, and that negative tone matters more. This project tests that idea, and
+the other signals, on past data for consumer-product companies that sell heavily on Amazon. A watchlist page
+shows each company's latest readings and a halal (Shariah) screen for live use.
 
 Research only. Not investment advice.
 
@@ -19,25 +23,37 @@ Research only. Not investment advice.
 2. **Tone:** a local model (`nlptown/bert-base-multilingual-uncased-sentiment`) reads each review's text and
    scores it from −2 to +2. Up to 1,000 random reviews per fiscal quarter are scored. The star rating the
    reviewer gave is kept separately as a baseline.
-3. **Results:** quarterly revenue and net income from SEC EDGAR. Q4 is derived as full year minus Q1–Q3.
-   Free analyst estimates don't exist, so "surprise" is approximated by the change in year-over-year
-   revenue growth.
+3. **Results:** quarterly revenue from SEC EDGAR. Q4 is derived as full year minus Q1–Q3.
 4. **Returns:** prices from Yahoo Finance. Abnormal return = stock return minus SPY's return.
 5. **Wikipedia:** monthly human pageviews from the Wikimedia API (from July 2015), summed per quarter and
    compared with the same quarter a year earlier.
-6. **Filing wording:** each 10-K and 10-Q is downloaded from EDGAR and scored for negative words (decline,
+6. **Google search:** monthly US Google Trends interest (from 2015) for up to five brand terms, compared with
+   the same quarter a year earlier. Uses the unofficial `pytrends` client, which Google rate-limits.
+7. **Filing wording:** each 10-K and 10-Q is downloaded from EDGAR and scored for negative words (decline,
    impairment, headwinds, ...) and uncertainty words per 1,000 words. A filing counts in the quarter it was
    filed and is compared with the same filing type a year earlier.
-7. **Tests:** for each quarter, does each signal predict:
-   - that quarter's results (announced about a month after the quarter ends)
-   - next quarter's results
-   - next quarter's abnormal return?
-
-   We report rank correlation "aligned" to each signal's predicted direction (positive = the idea works),
-   with each company's own average removed, separate slopes for tone drops and
-   rises, and a permutation test: shuffle quarters 2,000 times to see how often luck gives a link this strong.
-8. **Robustness:** every pooled result below p=0.05 is re-run on each half of the companies, before and from
-   2020, and with each company left out. The report shows whether it holds in every split.
+8. **Insider buying:** every Form 4 filed for the company. Per quarter, (insiders buying − insiders selling) /
+   (buying + selling), counting open-market trades only.
+9. **Short interest:** FINRA's twice-monthly short positions (free, from Dec 2017), as days to cover.
+10. **Outcomes:** for each quarter, does each signal predict:
+    - **sales surprise:** year-over-year revenue growth minus what last quarter's growth predicted (growth
+      persists but partly reverts; the forecast is a pooled regression). Analyst estimates aren't free, so
+      this stands in for a beat or miss.
+    - **next quarter's sales surprise**
+    - **earnings-day move:** the stock's move versus SPY around the results announcement (8-K item 2.02),
+      from the close before to the close of the second trading day. The price already holds what investors
+      expected, so the move shows how far results differed.
+    - **next quarter's abnormal return**
+11. **Tests:** rank correlation "aligned" to each signal's predicted direction (positive = the idea works),
+    with each company's own average removed, separate slopes for drops and rises, and a permutation test that
+    shuffles quarters within each company 2,000 times. A q-value (Benjamini-Hochberg) allows for the number of
+    tests run.
+12. **Robustness:** every pooled result below p=0.05 is re-run on each half of the companies, before and from
+    2020, and with each company left out. The report shows whether it holds in every split.
+13. **Watchlist and halal screen:** `reports/watchlist.html` shows each company's latest signal readings
+    against its own history, its last earnings-day move, and an AAOIFI-style financial screen: interest-bearing
+    debt and cash+securities each under 30% of market value, interest income under 5% of revenue. Whether the
+    business itself is permissible is set by hand in the config (`halal_business`, `halal_note`).
 
 Results so far are in [FINDINGS.md](FINDINGS.md).
 
@@ -58,8 +74,9 @@ uv run review-pulse all --company LOGI      # one company end to end
 uv run review-pulse all                     # every company in config/companies.yaml
 ```
 
-Steps can also be run one at a time: `fetch`, `score`, `analyze`, `report`. The report is written to
-`reports/report.html`.
+Steps can also be run one at a time: `fetch`, `score`, `analyze`, `report`, `watchlist`. The report is written
+to `reports/report.html` and the watchlist to `reports/watchlist.html`. `fetch --skip-reviews --sources ...`
+fetches only some sources (financials, prices, wiki, trends, filings, earnings, insiders, shorts).
 
 The dataset files are large (Electronics alone is about 7.8 GB) and are cached in `data/raw/`. Pass
 `--delete-raw` to `fetch` to remove them after filtering. `fetch` also lists similar brand-store names
@@ -74,7 +91,8 @@ names and dataset categories.
 
 - Only reviews up to about Sep 2023. Recent quarters need another source. Wikipedia and filings run to today.
 - Many tests are run (3 signals x 3 outcomes x every company), so a few will look significant by chance.
-- Revenue-growth change is a rough stand-in for an earnings surprise against analyst estimates.
+- The sales surprise and earnings-day move are stand-ins for a surprise against analyst estimates.
+- The halal screen is a research aid, not a ruling. Confirm with a scholar or a screening service.
 - Quarter boundaries use calendar months, so 52/53-week fiscal years are off by a few days.
 - One company's Amazon reviews cover only part of its sales.
 

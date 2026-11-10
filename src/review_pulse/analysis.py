@@ -1,20 +1,26 @@
 """Do the signals predict results and returns?
 
 Signals, each known by the end of fiscal quarter t:
-  tone          d_tone      = review tone[t] - tone[t-1]            (Amazon reviews, to 2023)
-  stars         d_stars     = star rating[t] - stars[t-1]           (baseline for tone)
-  wikipedia     wiki_yoy    = log Wikipedia views vs a year earlier
-  filing words  filing_chg  = negative+uncertain word rate in filings vs a year earlier
+  tone            d_tone      = review tone[t] - tone[t-1]                 (Amazon reviews, to 2023)
+  stars           d_stars     = star rating[t] - stars[t-1]                (baseline for tone)
+  wikipedia       wiki_yoy    = log Wikipedia views vs a year earlier
+  google search   trends_yoy  = log Google search interest vs a year earlier
+  filing words    filing_chg  = negative+uncertain word rate in filings vs a year earlier
+  insider buying  insider_npr = (insiders buying - selling) / (buying + selling), Form 4s filed in t
+  short interest  short_dtc   = days to cover at the quarter's last FINRA report
 
 Outcomes:
-  same-quarter results : growth_change[t]   (results for t are announced ~1 month after t ends)
-  next-quarter results : growth_change[t+1]
-  next-quarter return  : abn_ret[t+1]       (stock minus SPY; includes the announcement of t's results)
+  sales surprise         : sales_surprise[t]  year-over-year sales growth for t, minus what the previous
+                           quarter's growth predicted (results for t are announced ~1 month after t ends)
+  next sales surprise    : sales_surprise[t+1]
+  earnings-day move      : earn_ret[t]  stock minus SPY around the announcement of t's results
+  next-quarter return    : abn_ret[t+1] stock minus SPY over quarter t+1
 
 Each signal has an expected sign: +1 if a higher value should mean better outcomes. "Aligned" rank
 correlation = sign x correlation, so positive always means "in the direction the idea predicts".
 Pooled tests remove each company's own average first. A permutation test (shuffling the signal
-within each company) gives the chance of seeing a link this strong by luck.
+within each company) gives the chance of seeing a link this strong by luck, and a q-value adjusts
+that for the number of tests run (Benjamini-Hochberg).
 """
 
 from dataclasses import dataclass
@@ -23,20 +29,24 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-from . import filings, financials, prices, tone, wiki
+from . import earnings, filings, financials, insiders, prices, short_interest, tone, trends, wiki
 from .config import Company
 from .quarters import fiscal_quarter, qidx
 
 OUTCOMES = {
-    "same-quarter results": "growth_change",
-    "next-quarter results": "growth_change_next",
+    "sales surprise": "sales_surprise",
+    "next sales surprise": "sales_surprise_next",
+    "earnings-day move": "earn_ret",
     "next-quarter return": "abn_ret_next",
 }
 SIGNALS = {  # name: (column, expected sign)
     "tone": ("d_tone", 1),
     "stars": ("d_stars", 1),
     "wikipedia": ("wiki_yoy", 1),
+    "google search": ("trends_yoy", 1),
     "filing words": ("filing_chg", -1),
+    "insider buying": ("insider_npr", 1),
+    "short interest": ("short_dtc", -1),
 }
 
 
@@ -69,28 +79,51 @@ def company_panel(company: Company, start: str, min_reviews: int = 30) -> pd.Dat
     """One row per fiscal quarter with financial results from `start` onward."""
     fin = financials.load(company.ticker)
     first = qidx(*fiscal_quarter(pd.Timestamp(start).date(), company.fy_end_month))
-    df = fin[fin["qidx"] >= first][["qidx", "quarter", "end", "revenue", "net_income",
-                                    "rev_yoy", "growth_change"]].copy()
+    df = fin[fin["qidx"] >= first][["qidx", "quarter", "end", "revenue", "net_income", "rev_yoy"]].copy()
     qs = sorted(set(df["qidx"]) | {q + 1 for q in df["qidx"]})
     try:
         close, mkt = prices.load(company.ticker), prices.load(prices.MARKET)
         rets = prices.quarterly_returns(close, mkt, qs, company.fy_end_month)
+        earn = earnings.quarterly(company, close, mkt)
     except SystemExit:  # e.g. delisted, no free price history: test results only
         print(f"{company.ticker}: no prices, skipping return tests")
         rets = pd.DataFrame({"qidx": qs, "ret": np.nan, "mkt_ret": np.nan, "abn_ret": np.nan})
-    for part in (review_signals(company, min_reviews), wiki.quarterly(company), filings.quarterly(company)):
+        earn = pd.DataFrame(columns=["qidx", "earn_date", "earn_ret"])
+    parts = (review_signals(company, min_reviews), wiki.quarterly(company), trends.quarterly(company),
+             filings.quarterly(company), insiders.quarterly(company), short_interest.quarterly(company), earn)
+    for part in parts:
         df = df.merge(part, on="qidx", how="left")
     df = df.merge(rets, on="qidx", how="left").sort_values("qidx").reset_index(drop=True)
 
-    # Outcomes one quarter ahead (looked up by qidx so gaps don't misalign).
-    g = fin.set_index("qidx")["growth_change"]
+    # Values from neighbouring quarters, looked up by qidx so gaps don't misalign.
+    g = fin.set_index("qidx")["rev_yoy"]
     r = rets.set_index("qidx")["abn_ret"]
-    df["growth_change_next"] = [g.get(q + 1, np.nan) for q in df["qidx"]]
+    df["rev_yoy_prev"] = [g.get(q - 1, np.nan) for q in df["qidx"]]
     df["abn_ret_next"] = [r.get(q + 1, np.nan) for q in df["qidx"]]
     df.insert(0, "ticker", company.ticker)
-    num = df.columns.drop(["ticker", "quarter", "end"])
+    num = df.columns.drop(["ticker", "quarter", "end", "earn_date"])
     df[num] = df[num].apply(pd.to_numeric, errors="coerce")
     return df
+
+
+def add_sales_surprise(panel: pd.DataFrame) -> pd.DataFrame:
+    """sales_surprise = year-over-year growth minus a forecast from the previous quarter's growth.
+
+    Growth persists from quarter to quarter but partly reverts, so the forecast is a pooled regression
+    of growth on last quarter's growth, each relative to the company's own average. What's left is the
+    part of growth that last quarter didn't predict. The regression uses all years, which is fine for a
+    backtest of signals but would need a rolling fit for live use.
+    """
+    p = panel.copy()
+    mean = p.groupby("ticker")["rev_yoy"].transform("mean")
+    y, x = p["rev_yoy"] - mean, p["rev_yoy_prev"] - mean
+    ok = x.notna() & y.notna() & (x.abs() < 2) & (y.abs() < 2)  # skip extreme jumps (acquisitions, COVID)
+    slope = float(np.polyfit(x[ok], y[ok], 1)[0]) if ok.sum() > 10 else 0.0
+    p["sales_surprise"] = y - slope * x
+    s = p.set_index(["ticker", "qidx"])["sales_surprise"]
+    p["sales_surprise_next"] = [s.get((t, q + 1), np.nan) for t, q in zip(p["ticker"], p["qidx"])]
+    p.attrs["growth_persistence"] = slope
+    return p
 
 
 @dataclass
@@ -105,18 +138,30 @@ class Result:
 
 
 def permutation_p(x: np.ndarray, y: np.ndarray, groups: np.ndarray, n: int = 2000, seed: int = 0) -> float:
-    """Two-sided p-value for Spearman rho, shuffling x within each group."""
+    """Two-sided p-value for Spearman rho, shuffling x within each group.
+
+    Spearman rho is the correlation of ranks, and shuffling x within groups only reorders its ranks, so the
+    ranks are computed once and all shuffles are scored in one matrix product.
+    """
     rng = np.random.default_rng(seed)
-    obs = abs(stats.spearmanr(x, y).statistic)
-    idx_by_group = [np.flatnonzero(groups == g) for g in np.unique(groups)]
-    hits = 0
-    for _ in range(n):
-        xs = x.copy()
-        for idx in idx_by_group:
-            xs[idx] = x[rng.permutation(idx)]
-        if abs(stats.spearmanr(xs, y).statistic) >= obs:
-            hits += 1
+    rx, ry = stats.rankdata(x), stats.rankdata(y)
+    rx, ry = rx - rx.mean(), ry - ry.mean()
+    obs = abs(rx @ ry)
+    perm = np.tile(np.arange(len(x)), (n, 1))
+    for g in np.unique(groups):
+        idx = np.flatnonzero(groups == g)
+        perm[:, idx] = idx[np.argsort(rng.random((n, len(idx))), axis=1)]
+    hits = int((np.abs(rx[perm] @ ry) >= obs - 1e-9).sum())
     return (hits + 1) / (n + 1)
+
+
+def q_values(p: pd.Series) -> pd.Series:
+    """Benjamini-Hochberg: the false-discovery rate at which each test would count as a finding."""
+    p = p.astype(float)
+    order = p.sort_values()
+    m = len(order)
+    q = (order * m / np.arange(1, m + 1))[::-1].cummin()[::-1].clip(upper=1)
+    return q.reindex(p.index)
 
 
 def test(panel: pd.DataFrame, signal: str, outcome: str, n_perm: int = 2000) -> Result | None:
@@ -150,7 +195,13 @@ def run(panel: pd.DataFrame) -> pd.DataFrame:
                 r = test(sub, signal, outcome)
                 if r:
                     rows.append({"scope": name, **r.__dict__})
-    return pd.DataFrame(rows)
+    out = pd.DataFrame(rows)
+    if out.empty:
+        return out
+    # Correct for the number of tests: pooled tests as one family, per-company tests as another.
+    pooled = out["scope"] == "All companies"
+    out["q_value"] = pd.concat([q_values(out.loc[pooled, "perm_p"]), q_values(out.loc[~pooled, "perm_p"])])
+    return out
 
 
 def robustness(panel: pd.DataFrame, signal: str, outcome: str, split_year: int = 2020) -> pd.DataFrame:
@@ -186,13 +237,18 @@ def robustness(panel: pd.DataFrame, signal: str, outcome: str, split_year: int =
     return out
 
 
-def describe(rho: float, perm_p: float) -> str:
+def describe(rho: float, perm_p: float, q: float | None = None) -> str:
     strength = abs(rho)
     size = "no" if strength < 0.1 else "a weak" if strength < 0.25 else "a moderate" if strength < 0.5 else "a strong"
     direction = "" if size == "no" else (" link in the predicted direction" if rho > 0
                                          else " link in the OPPOSITE direction")
-    luck = ("unlikely to be luck" if perm_p < 0.05 else
-            "could easily be luck" if perm_p > 0.2 else "borderline")
+    if q is not None and not np.isnan(q):
+        luck = ("holds up after allowing for the number of tests" if q < 0.05 else
+                "could be luck, given how many tests were run" if perm_p < 0.05 else
+                "could easily be luck" if perm_p > 0.2 else "borderline")
+    else:
+        luck = ("unlikely to be luck" if perm_p < 0.05 else
+                "could easily be luck" if perm_p > 0.2 else "borderline")
     return f"{size}{direction or ' link'} ({luck})"
 
 
@@ -201,7 +257,10 @@ def verdict(results: pd.DataFrame) -> str:
     pooled = results[results["scope"] == "All companies"]
     if pooled.empty:
         return "Not enough data to test yet."
-    return "\n".join(
-        f"{r.signal.capitalize()} vs {r.outcome}: {describe(r.rho, r.perm_p)}. "
-        f"Correlation {r.rho:+.2f}, {r.n} company-quarters, luck p={r.perm_p:.3f}."
-        for r in pooled.itertuples())
+    lines = []
+    for r in pooled.itertuples():
+        q = getattr(r, "q_value", None)
+        lines.append(f"{r.signal.capitalize()} vs {r.outcome}: {describe(r.rho, r.perm_p, q)}. "
+                     f"Correlation {r.rho:+.2f}, {r.n} company-quarters, luck p={r.perm_p:.3f}"
+                     + (f", q={q:.3f}." if q is not None else "."))
+    return "\n".join(lines)

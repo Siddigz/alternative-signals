@@ -5,6 +5,9 @@
 # stores:        Amazon "store" names (brand pages) that belong to the company, matched case-insensitively.
 # categories:    Amazon Reviews 2023 categories to search for those stores.
 # wiki:          English Wikipedia article titles for the company and its main brands.
+# trends:        Google Trends search terms, up to 5 (default: the company name).
+# halal_business: true/false once the business activity has been reviewed for live use (default: not reviewed).
+# halal_note:    known concerns for that review.
 #
 # The dataset ends around Sep 2023, so the test window is roughly 2015-2023.
 
@@ -19,6 +22,7 @@ companies:
     stores: [Logitech, Logitech G, Logitech Gaming, Ultimate Ears, Astro Gaming, Blue, Blue Microphones, Jaybird]
     categories: [Electronics, Video_Games]
     wiki: [Logitech]
+    trends: ["Logitech"]
 
   YETI:
     name: YETI
@@ -26,6 +30,7 @@ companies:
     stores: [YETI]
     categories: [Sports_and_Outdoors, Home_and_Kitchen]
     wiki: [Yeti Holdings]
+    trends: ["YETI cooler", "YETI"]
 
   HELE:
     name: Helen of Troy
@@ -33,6 +38,7 @@ companies:
     stores: [OXO, Hydro Flask, Osprey, Osprey Packs, Vicks, PUR, Drybar, Hot Tools, Revlon]
     categories: [Home_and_Kitchen, Sports_and_Outdoors, Beauty_and_Personal_Care, Health_and_Household]
     wiki: [Helen of Troy Limited, Hydro Flask]
+    trends: ["OXO", "Hydro Flask", "Osprey", "Vicks"]
 
   NWL:
     name: Newell Brands
@@ -40,6 +46,7 @@ companies:
     stores: [Rubbermaid, Sharpie, Coleman, Graco, Yankee Candle, Oster, Sunbeam, Crock-Pot, Mr. Coffee, Paper Mate, Elmer's, FoodSaver, Contigo]
     categories: [Home_and_Kitchen, Office_Products, Sports_and_Outdoors, Baby_Products, Arts_Crafts_and_Sewing]
     wiki: [Newell Brands, Rubbermaid]
+    trends: ["Rubbermaid", "Sharpie", "Coleman", "Yankee Candle", "Crock-Pot"]
 
   IRBT:
     name: iRobot
@@ -48,6 +55,7 @@ companies:
     stores: [iRobot]
     categories: [Home_and_Kitchen]
     wiki: [iRobot, Roomba]
+    trends: ["Roomba", "iRobot"]
 
   GPRO:
     name: GoPro
@@ -69,6 +77,7 @@ companies:
     stores: [Corsair, Elgato, SCUF Gaming, SCUF]
     categories: [Electronics, Video_Games]
     wiki: [Corsair Gaming]
+    trends: ["Corsair", "Elgato"]
 
   COOK:
     name: Traeger
@@ -76,6 +85,7 @@ companies:
     stores: [Traeger, Traeger Grills]
     categories: [Patio_Lawn_and_Garden]
     wiki: [Traeger]
+    trends: ["Traeger"]
 
   # --- Wider test (added 2026-11-09). Store names checked against the dataset's product files.
 
@@ -88,10 +98,12 @@ companies:
 
   TBCH:
     name: Turtle Beach
-    fy_end_month: 12  # ticker was HEAR until 2025
+    fy_end_month: 12
+    former_tickers: [HEAR]  # ticker until 2025
     stores: [Turtle Beach]
     categories: [Video_Games, Electronics]
     wiki: [Turtle Beach Corporation]
+    trends: ["Turtle Beach"]
 
   NTGR:
     name: Netgear
@@ -106,6 +118,7 @@ companies:
     stores: [Arlo]
     categories: [Electronics]
     wiki: [Arlo Technologies]
+    trends: ["Arlo camera"]
 
   KOSS:
     name: Koss
@@ -113,6 +126,7 @@ companies:
     stores: [Koss]
     categories: [Electronics]
     wiki: [Koss Corporation]
+    trends: ["Koss headphones"]
 
   HBB:
     name: Hamilton Beach Brands
@@ -120,6 +134,7 @@ companies:
     stores: [Hamilton Beach, Hamilton Beach Commercial, Hamilton Beach Professional, Proctor Silex]
     categories: [Home_and_Kitchen]
     wiki: [Hamilton Beach Brands]
+    trends: ["Hamilton Beach"]
 
   LCUT:
     name: Lifetime Brands
@@ -128,6 +143,7 @@ companies:
              Taylor Precision Products, S'well]
     categories: [Home_and_Kitchen]
     wiki: [Lifetime Brands]
+    trends: ["Farberware", "Mikasa", "Pfaltzgraff"]
 
   TUP:
     name: Tupperware
@@ -136,6 +152,7 @@ companies:
     stores: [Tupperware, New Tupperware]
     categories: [Home_and_Kitchen]
     wiki: [Tupperware Brands]
+    trends: ["Tupperware"]
 
   NPK:
     name: National Presto Industries
@@ -143,6 +160,7 @@ companies:
     stores: [Presto]
     categories: [Home_and_Kitchen]
     wiki: [National Presto Industries]
+    trends: ["Presto"]
 
   CLX:
     name: Clorox
@@ -151,6 +169,7 @@ companies:
              Liquid-Plumr, Rainbow Light, Natural Vitality]
     categories: [Health_and_Household, Home_and_Kitchen, Beauty_and_Personal_Care, Pet_Supplies, Patio_Lawn_and_Garden]
     wiki: [Clorox, Burt's Bees]
+    trends: ["Clorox", "Brita", "Burt's Bees", "Glad", "Kingsford"]
 
   ELF:
     name: e.l.f. Beauty
@@ -158,6 +177,7 @@ companies:
     stores: [e.l.f., e.l.f. Cosmetics]
     categories: [Beauty_and_Personal_Care]
     wiki: [E.l.f. Cosmetics]
+    trends: ["elf cosmetics"]
 
   COTY:
     name: Coty
@@ -165,6 +185,8 @@ companies:
     stores: [COVERGIRL, Rimmel, Rimmel London, Sally Hansen, Max Factor]
     categories: [Beauty_and_Personal_Care]
     wiki: [Coty Inc.]
+    trends: ["CoverGirl", "Rimmel", "Sally Hansen", "Max Factor"]
+    halal_note: "Alcohol-based fragrances are a large share of sales; scholars differ on perfume alcohol."
 
   EPC:
     name: Edgewell Personal Care
@@ -172,6 +194,8 @@ companies:
     stores: [Schick, Schick Hydro Silk, Banana Boat, Hawaiian Tropic, Playtex, Wet Ones, Skintimate, Cremo, Carefree]
     categories: [Beauty_and_Personal_Care, Health_and_Household]
     wiki: [Edgewell Personal Care]
+    trends: ["Schick", "Banana Boat", "Hawaiian Tropic", "Playtex"]
+    halal_note: "Mostly razors, sun care and feminine care; check smaller lines."
 
   ENR:
     name: Energizer Holdings
@@ -179,6 +203,7 @@ companies:
     stores: [Energizer, Energizer Batteries, Eveready]
     categories: [Health_and_Household, Electronics]
     wiki: [Energizer Holdings]
+    trends: ["Energizer", "Eveready"]
 
   CHD:
     name: Church & Dwight
@@ -186,6 +211,8 @@ companies:
     stores: [Arm & Hammer, OxiClean, Waterpik, TROJAN, Batiste, Vitafusion, Orajel, Nair, Spinbrush, Zicam]
     categories: [Health_and_Household, Beauty_and_Personal_Care, Pet_Supplies]
     wiki: [Church & Dwight]
+    trends: ["Arm & Hammer", "OxiClean", "Waterpik", "Trojan", "Batiste"]
+    halal_note: "Sells Trojan condoms and sexual-wellness products; opinions differ."
 
   PBH:
     name: Prestige Consumer Healthcare
@@ -194,6 +221,7 @@ companies:
              Boudreaux's Butt Paste, Fleet, Ludens, Dermoplast]
     categories: [Health_and_Household, Baby_Products]
     wiki: [Prestige Consumer Healthcare]
+    trends: ["Dramamine", "Monistat", "Clear Eyes", "Summer's Eve"]
 
   JOUT:
     name: Johnson Outdoors
@@ -201,6 +229,7 @@ companies:
     stores: [Minn Kota, Humminbird, Eureka!, Jetboil, Old Town, Old Town Canoe, Ocean Kayak, Scubapro, SCUBAPRO]
     categories: [Sports_and_Outdoors, Electronics]
     wiki: [Johnson Outdoors]
+    trends: ["Minn Kota", "Humminbird", "Jetboil", "Old Town Canoe"]
 
   CLAR:
     name: Clarus
@@ -208,6 +237,8 @@ companies:
     stores: [Black Diamond, PIEPS]
     categories: [Sports_and_Outdoors]
     wiki: [Black Diamond Equipment]
+    trends: ["Black Diamond"]
+    halal_note: "Owned Sierra and Barnes bullets (ammunition) until 2024."
 
   HAS:
     name: Hasbro
@@ -216,6 +247,8 @@ companies:
              Wizards of the Coast]
     categories: [Toys_and_Games]
     wiki: [Hasbro]
+    trends: ["Hasbro", "Nerf", "Play-Doh", "Monopoly", "Transformers"]
+    halal_note: "Includes Wizards of the Coast (Magic: The Gathering, Dungeons & Dragons)."
 
   MAT:
     name: Mattel
@@ -224,6 +257,7 @@ companies:
              Mega Construx, American Girl, Thomas & Friends]
     categories: [Toys_and_Games, Baby_Products]
     wiki: [Mattel]
+    trends: ["Mattel", "Barbie", "Hot Wheels", "Fisher-Price"]
 
   JAKK:
     name: Jakks Pacific
@@ -231,6 +265,7 @@ companies:
     stores: [Jakks Pacific, Jakks, Jakks Pacific Inc, Disguise]
     categories: [Toys_and_Games]
     wiki: [Jakks Pacific]
+    trends: ["Jakks Pacific"]
 
   FNKO:
     name: Funko
@@ -238,6 +273,7 @@ companies:
     stores: [Funko, Loungefly]
     categories: [Toys_and_Games, Arts_Crafts_and_Sewing]
     wiki: [Funko]
+    trends: ["Funko", "Loungefly"]
 
   CENT:
     name: Central Garden & Pet
@@ -245,6 +281,7 @@ companies:
     stores: [Nylabone, Kaytee, Four Paws, Aqueon, Zilla, Farnam, Pennington, Pennington Seed, Amdro, Sevin]
     categories: [Pet_Supplies, Patio_Lawn_and_Garden]
     wiki: [Central Garden & Pet]
+    trends: ["Nylabone", "Kaytee", "Pennington"]
 
   SMG:
     name: Scotts Miracle-Gro
@@ -252,6 +289,8 @@ companies:
     stores: [Miracle-Gro, Scotts, Ortho, Roundup, Tomcat, Earthgro, The Scotts Miracle-Gro Company]
     categories: [Patio_Lawn_and_Garden]
     wiki: [Scotts Miracle-Gro Company]
+    trends: ["Miracle-Gro", "Scotts", "Ortho"]
+    halal_note: "Hawthorne segment sells hydroponics supplies to cannabis growers."
 
   ACCO:
     name: ACCO Brands
@@ -259,3 +298,60 @@ companies:
     stores: [AT-A-GLANCE, Swingline, Five Star, Mead, Kensington, PowerA, Quartet, GBC, Wilson Jones]
     categories: [Office_Products, Electronics, Video_Games]
     wiki: [ACCO Brands]
+    trends: ["Five Star", "Swingline", "Kensington", "PowerA"]
+
+  # --- Added 2026-11-10.
+
+  PG:
+    name: Procter & Gamble
+    fy_end_month: 6
+    stores: [Tide, Gillette, Gillette Venus, Pampers, Oral-B, Crest, Charmin, Bounty, Olay, Head & Shoulders,
+             Pantene, Febreze, Dawn, Cascade, Old Spice, Downy, Swiffer, Always, Tampax, Secret, Metamucil]
+    categories: [Health_and_Household, Beauty_and_Personal_Care, Baby_Products, Home_and_Kitchen]
+    wiki: [Procter & Gamble]
+    trends: ["Tide", "Pampers", "Gillette", "Crest", "Charmin"]
+
+  CL:
+    name: Colgate-Palmolive
+    fy_end_month: 12
+    stores: [Colgate, Colgate Palmolive, Colgate-Palmolive, Palmolive, Softsoap, Irish Spring, Speed Stick,
+             Lady Speed Stick, Tom's of Maine, Hill's Science Diet, HILL'S PRESCRIPTION DIET, Hill's Ideal Balance, HILL'S]
+    categories: [Health_and_Household, Beauty_and_Personal_Care, Pet_Supplies]
+    wiki: [Colgate-Palmolive]
+    trends: ["Colgate", "Hill's Science Diet", "Palmolive", "Softsoap"]
+
+  KMB:
+    name: Kimberly-Clark
+    fy_end_month: 12
+    stores: [HUGGIES, Kleenex, Cottonelle, Kotex, U by Kotex, Depend, Poise, Pull-Ups, GoodNites]
+    categories: [Health_and_Household, Baby_Products]
+    wiki: [Kimberly-Clark]
+    trends: ["Huggies", "Kleenex", "Cottonelle", "Kotex"]
+
+  SPB:
+    name: Spectrum Brands
+    fy_end_month: 9
+    # Beauty, home and pet only: "Remington" in sports/garden is a different company's products.
+    stores: [Remington, George Foreman, Russell Hobbs, Nature's Miracle, Tetra, Tetra Pond, FURminator, Dingo]
+    categories: [Beauty_and_Personal_Care, Home_and_Kitchen, Pet_Supplies]
+    wiki: [Spectrum Brands]
+    trends: ["Remington", "George Foreman", "Tetra", "FURminator"]
+
+  VSTO:
+    name: Vista Outdoor
+    fy_end_month: 3
+    cik: 1616318  # split up and delisted in 2024-25
+    stores: [CamelBak, Bushnell, Giro, Camp Chef, Primos Hunting, Blackburn, Fox Racing, Simms, QuietKat]
+    categories: [Sports_and_Outdoors, Electronics, Patio_Lawn_and_Garden]
+    wiki: [Vista Outdoor]
+    trends: ["CamelBak", "Bushnell", "Giro", "Camp Chef"]
+    halal_note: "Sold ammunition (Federal, CCI, Remington) until the 2024 split."
+
+  SGI:
+    name: Somnigroup (Tempur Sealy)
+    fy_end_month: 12
+    former_tickers: [TPX]  # renamed in 2025
+    stores: [Tempur-Pedic, Sealy, SEALY, Sealy Posturepedic, Cocoon by Sealy]
+    categories: [Home_and_Kitchen, Baby_Products]
+    wiki: [Tempur Sealy International]
+    trends: [Tempur-Pedic, Sealy]

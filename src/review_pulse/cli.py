@@ -4,35 +4,49 @@ import argparse
 
 import pandas as pd
 
-from . import analysis, filings, financials, prices, report, reviews, tone, wiki
+from . import (analysis, earnings, filings, financials, insiders, prices, report, reviews,
+               short_interest, tone, trends, watchlist, wiki)
 from .config import DATA, load_config, select
+
+
+SOURCES = {  # name: fetch(company, cfg)
+    "financials": lambda c, cfg: financials.fetch(c),
+    "prices": lambda c, cfg: prices.fetch(c, cfg.start, cfg.end),
+    "wiki": lambda c, cfg: wiki.fetch(c),
+    "trends": lambda c, cfg: trends.fetch(c),
+    "filings": lambda c, cfg: filings.fetch(c, cfg.start),
+    "earnings": lambda c, cfg: earnings.fetch(c),
+    "insiders": lambda c, cfg: insiders.fetch(c, cfg.start),
+    "shorts": lambda c, cfg: short_interest.fetch(c),
+}
 
 
 def main(argv: list[str] | None = None) -> None:
     p = argparse.ArgumentParser(prog="review-pulse", description=__doc__)
-    p.add_argument("step", choices=["fetch", "score", "analyze", "report", "all"])
+    p.add_argument("step", choices=["fetch", "score", "analyze", "report", "watchlist", "all"])
     p.add_argument("--company", "-c", nargs="*", help="Tickers to run (default: all in config)")
     p.add_argument("--per-quarter", type=int, default=1000, help="Reviews scored per quarter (default 1000)")
     p.add_argument("--min-reviews", type=int, default=30, help="Skip quarters with fewer scored reviews")
     p.add_argument("--skip-reviews", action="store_true",
                    help="fetch: skip Amazon reviews (financials, prices, Wikipedia, filings only)")
     p.add_argument("--delete-raw", action="store_true", help="fetch: delete downloaded dataset files after use")
+    p.add_argument("--sources", nargs="*", choices=list(SOURCES), default=list(SOURCES),
+                   help="fetch: which non-review sources to fetch (default: all)")
     a = p.parse_args(argv)
 
     cfg = load_config()
     companies = select(cfg, a.company)
-    steps = ["fetch", "score", "analyze", "report"] if a.step == "all" else [a.step]
+    steps = ["fetch", "score", "analyze", "report", "watchlist"] if a.step == "all" else [a.step]
 
     if "fetch" in steps:
         if not a.skip_reviews:
             reviews.fetch(companies, cfg.start, cfg.end, keep_raw=not a.delete_raw)
         for c in companies:
-            for step in (financials.fetch, lambda c: prices.fetch(c, cfg.start, cfg.end),
-                         wiki.fetch, lambda c: filings.fetch(c, cfg.start)):
+            for name in a.sources:
                 try:
-                    step(c)
+                    SOURCES[name](c, cfg)
                 except (SystemExit, Exception) as e:  # keep going with the other companies
-                    print(f"{c.ticker}: FAILED - {e}")
+                    print(f"{c.ticker}: {name} FAILED - {e}")
 
     if "score" in steps:
         scorer = tone.Scorer()
@@ -42,6 +56,7 @@ def main(argv: list[str] | None = None) -> None:
     panel_path, results_path = DATA / "panel.parquet", DATA / "results.parquet"
     if "analyze" in steps:
         panel = pd.concat([analysis.company_panel(c, cfg.start, a.min_reviews) for c in companies], ignore_index=True)
+        panel = analysis.add_sales_surprise(panel)
         results = analysis.run(panel)
         panel.to_parquet(panel_path, index=False)
         results.to_parquet(results_path, index=False)
@@ -51,6 +66,10 @@ def main(argv: list[str] | None = None) -> None:
         panel, results = pd.read_parquet(panel_path), pd.read_parquet(results_path)
         names = {c.ticker: c.name for c in cfg.companies.values()}
         print("Report:", report.write(panel, results, names))
+
+    if "watchlist" in steps:
+        panel, results = pd.read_parquet(panel_path), pd.read_parquet(results_path)
+        print("Watchlist:", watchlist.write(companies, panel, results))
 
 
 if __name__ == "__main__":

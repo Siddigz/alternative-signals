@@ -41,7 +41,8 @@ def word_rates(raw_html: str) -> dict:
             "unc_rate": 1000 * len(UNCERTAIN.findall(text)) / words}
 
 
-def filing_index(cik: int) -> pd.DataFrame:
+def filing_index(cik: int, forms: set[str] = FORMS) -> pd.DataFrame:
+    """All filings of the given form types, from the SEC submissions API."""
     def get(url):
         time.sleep(0.15)  # SEC allows 10 requests/second
         r = requests.get(url, headers=_headers(), timeout=60)
@@ -53,8 +54,8 @@ def filing_index(cik: int) -> pd.DataFrame:
     for f in sub["filings"].get("files", []):
         parts.append(pd.DataFrame(get(f"https://data.sec.gov/submissions/{f['name']}")))
     df = pd.concat(parts, ignore_index=True)
-    df = df[df["form"].isin(FORMS)]
-    return df[["accessionNumber", "filingDate", "reportDate", "form", "primaryDocument"]]
+    df = df[df["form"].isin(forms)]
+    return df[["accessionNumber", "filingDate", "reportDate", "form", "items", "primaryDocument"]]
 
 
 def fetch(company: Company, start: str) -> None:
