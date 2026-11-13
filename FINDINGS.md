@@ -2,6 +2,71 @@
 
 Full charts and tables: `reports/report.html` (open it in a browser).
 
+## Copying Congress (2026-11-13)
+
+**Short answer: no. Copying the House members with the best past record, from the day their trades were
+disclosed, did no better than copying every member, and no group beat SPY or QQQ by more than luck would
+explain. The worst-ranked members actually did slightly better than the best-ranked.**
+
+This tests a popular Reddit guide that says the top 30 politicians beat the market even after the filing
+delay. Full page: `reports/congress.html`.
+
+### What was tested
+
+- **Data:**
+  - Every electronically filed House trade report from 2014 to now: 5,991 reports with 54,887 transactions
+    by 303 members.
+  - Of those, 18,621 stock and call-option buys can be copied, and 88% of them have price history.
+- **Picking whom to copy:**
+  - Each year, rank members by how their past buys did against SPY.
+  - The main setup uses the previous two years, counting only trades whose six-month hold had already
+    ended, so no hindsight.
+  - Copy the top 30.
+- **Copying:** buy at the close of the first trading day after the report was filed, then hold six months.
+- **Checks:** copying everyone, copying the bottom 30, and ten variants:
+  - holds of 1 and 3 months
+  - top 10 instead of top 30
+  - 1- or 3-year records
+  - no options
+  - 2016–2019 and 2020 onward separately
+  - a halal-only version
+
+### Results (alpha a year, t-statistic in brackets; about 2 or more would be unlikely to be luck)
+
+| Setup | Top members vs QQQ | Every member vs QQQ | Bottom members vs QQQ |
+|---|---|---|---|
+| Main (top 30, 2-year record, hold 6 months) | +1.2% (0.4) | +1.1% (0.3) | +3.1% (0.9) |
+| 2016–2019 | −3.6% (−0.7) | −2.6% (−0.5) | −2.3% (−0.5) |
+| 2020 on | +0.3% (0.1) | +0.6% (0.1) | +3.2% (0.6) |
+| Halal: shares only, permissible industries | +2.0% (0.6) | +1.3% (0.4) | +3.3% (1.0) |
+
+- Against SPY the main top group is +0.1% a year (t 0.1).
+- None of the 30 group-and-setup results reaches t = 2.
+- The top group beat the all-members group in only 5 of 10 setups, a coin flip.
+- Ranking on past results doesn't find people who keep winning.
+
+### What the reporting delay costs
+
+- The median trade is reported 28 days after it happens, and 17% are later than the 45 days the law allows.
+- Pelosi's buys (75 with prices) beat SPY by 5.5% per six months measured from the trade date. Measured from
+  the disclosure date, that drops to 2.8%: the delay costs about half her edge.
+- What's left (+7% a year vs QQQ, t 1.2) isn't distinguishable from luck over 75 trades, many of them call options.
+
+### Gaps
+
+- **Paper filings aren't read.** Ro Khanna (121 reports) and Michael McCaul (153) file only on paper, so the
+  members the Reddit guide rates highest are missing entirely. Reading them needs OCR.
+- **The Senate isn't included.**
+- **Delisted stocks are dropped.** They have no free price history, which flatters every group a little.
+- **The halal version screens industries only.** It doesn't apply the debt and cash ratios as they were at the
+  time of each trade.
+
+### Daily check
+
+`review-pulse congress-alerts` downloads new House reports, lists buys by this year's top-ranked members from
+the last 7 days, runs each stock through the halal screen, and writes `reports/congress_alerts.html`. Given
+the backtest, treat it as a news feed, not a trading signal.
+
 ## Third backtest: 40 companies, 7 signals, 4 outcomes (2026-11-10)
 
 **Short answer: Google search interest is the first signal that holds up. When searches for a company's

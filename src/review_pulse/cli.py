@@ -4,7 +4,7 @@ import argparse
 
 import pandas as pd
 
-from . import (analysis, earnings, filings, financials, insiders, prices, report, reviews,
+from . import (analysis, congress, copytrade, earnings, filings, financials, insiders, prices, report, reviews,
                short_interest, tone, trends, watchlist, wiki)
 from .config import DATA, load_config, select
 
@@ -23,7 +23,8 @@ SOURCES = {  # name: fetch(company, cfg)
 
 def main(argv: list[str] | None = None) -> None:
     p = argparse.ArgumentParser(prog="review-pulse", description=__doc__)
-    p.add_argument("step", choices=["fetch", "score", "analyze", "report", "watchlist", "all"])
+    p.add_argument("step", choices=["fetch", "score", "analyze", "report", "watchlist", "all",
+                                    "congress-fetch", "congress", "congress-alerts"])
     p.add_argument("--company", "-c", nargs="*", help="Tickers to run (default: all in config)")
     p.add_argument("--per-quarter", type=int, default=1000, help="Reviews scored per quarter (default 1000)")
     p.add_argument("--min-reviews", type=int, default=30, help="Skip quarters with fewer scored reviews")
@@ -33,6 +34,26 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--sources", nargs="*", choices=list(SOURCES), default=list(SOURCES),
                    help="fetch: which non-review sources to fetch (default: all)")
     a = p.parse_args(argv)
+
+    if a.step == "congress-fetch":
+        trades = congress.fetch()
+        congress.fetch_prices(sorted(copytrade.buys(trades)["ticker"].unique()))
+        return
+    if a.step == "congress-alerts":
+        from . import alerts
+        res = alerts.check()
+        print(alerts.summary(res))
+        print("Page:", alerts.write(res))
+        return
+    if a.step == "congress":
+        from . import congress_report
+        results = copytrade.run()
+        results.to_parquet(congress.DIR / "results.parquet", index=False)
+        with pd.option_context("display.width", 200, "display.max_columns", 20):
+            print(results[["setup", "group", "trades", "members", "alpha_spy", "t_spy",
+                           "alpha_qqq", "t_qqq", "beta_qqq"]].round(3).to_string(index=False))
+        print("Report:", congress_report.write(results))
+        return
 
     cfg = load_config()
     companies = select(cfg, a.company)

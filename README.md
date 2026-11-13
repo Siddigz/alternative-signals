@@ -57,6 +57,28 @@ Research only. Not investment advice.
 
 Results so far are in [FINDINGS.md](FINDINGS.md).
 
+## Copying Congress
+
+A separate backtest tests the claim that you can profit by copying the stock buys of the best-performing
+members of Congress once their trades are disclosed (`reports/congress.html`).
+
+1. **Data:** every House periodic transaction report (STOCK Act) since 2014, from the House Clerk's site.
+   Electronic reports are parsed; paper reports are scanned images and are skipped (most reports before 2018,
+   about 13% now).
+2. **Picking whom to copy:** each year, members are ranked by how their disclosed buys did against SPY over
+   the previous two years, counting only trades whose holding period had ended before the year began, so no
+   future information is used. The top 30 are copied.
+3. **Copying:** buy at the close of the first trading day after the report was filed, hold about six months.
+4. **Scoring:** daily returns of the copied portfolio against SPY and QQQ (alpha and beta, Newey-West t-stats),
+   next to copying every member and copying the worst-ranked members. Variants change the hold, list size,
+   ranking window, years, drop options, or keep only shares in permissible (halal) industries.
+
+```bash
+uv run review-pulse congress-fetch   # download and parse reports, then prices (about an hour the first time)
+uv run review-pulse congress         # run the backtest and write reports/congress.html
+uv run review-pulse congress-alerts  # daily check: new buys by this year's top-ranked members, halal-screened
+```
+
 ## Setup
 
 Needs [uv](https://docs.astral.sh/uv/). The default install is the CUDA build of PyTorch. For a CPU-only

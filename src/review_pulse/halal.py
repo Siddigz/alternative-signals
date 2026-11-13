@@ -117,7 +117,8 @@ class Screen:
         return out
 
 
-def screen(company: Company, facts: dict | None = None) -> Screen:
+def screen(company: Company, facts: dict | None = None, close: pd.Series | None = None,
+           fin: pd.DataFrame | None = None) -> Screen:
     facts = facts or financials.company_facts(financials.company_cik(company))
     # Balance-sheet date: the latest date with a cash figure under any of the cash concepts
     # (companies switch concepts over the years).
@@ -145,13 +146,13 @@ def screen(company: Company, facts: dict | None = None) -> Screen:
 
     shares = shares_outstanding(facts, on)
     try:
-        close = prices.load(company.ticker)
+        close = prices.load(company.ticker) if close is None else close
         avg = float(close[close.index >= close.index[-1] - pd.DateOffset(months=12)].mean())
     except SystemExit:
         avg = np.nan
     mv = shares[0] * avg if shares else np.nan
 
-    fin = financials.load(company.ticker).sort_values("qidx")
+    fin = (financials.load(company.ticker) if fin is None else fin).sort_values("qidx")
     rev_ttm = float(fin["revenue"].tail(4).sum())
     inc = financials.quarterly_series(facts, INTEREST_INCOME)
     inc_ttm = float(inc.sort_values("end")["val"].tail(4).sum()) if len(inc) else 0.0
@@ -165,3 +166,16 @@ def screen(company: Company, facts: dict | None = None) -> Screen:
     return Screen(company.ticker, f"{on:%Y-%m-%d}", mv, debt, " + ".join(parts) or "none reported",
                   cash, cash_parts, income_share, debt_ratio, cash_ratio, ok,
                   company.halal_business, company.halal_note)
+
+
+def screen_ticker(ticker: str, cik: int, fy_end_month: int = 12, business: bool | None = None,
+                  note: str = "") -> Screen:
+    """Screen any listed company by ticker (not just those in the config), using a year of fresh prices."""
+    c = Company(ticker=ticker, name=ticker, fy_end_month=fy_end_month, stores=[], categories=[],
+                cik=cik, halal_business=business, halal_note=note)
+    facts = financials.company_facts(cik)
+    fin = financials.from_facts(facts, c)
+    end = pd.Timestamp.today()
+    close = prices.download(ticker, (end - pd.DateOffset(months=13)).strftime("%Y-%m-%d"),
+                            (end + pd.Timedelta(days=1)).strftime("%Y-%m-%d"))
+    return screen(c, facts, close, fin)
