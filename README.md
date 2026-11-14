@@ -79,6 +79,21 @@ uv run review-pulse congress         # run the backtest and write reports/congre
 uv run review-pulse congress-alerts  # daily check: new buys by this year's top-ranked members, halal-screened
 ```
 
+## Sector rotation
+
+Does holding the sectors a signal ranks highest beat holding every sector (`reports/sectors.html`)?
+
+1. **Data:** Ken French's monthly US industry returns (12 and 49 industries, 1926–today) and the SPDR sector
+   ETFs (1999–today).
+2. **Rule:** each month, rank sectors by momentum, short-term reversal or low volatility (using only data up
+   to that month), hold the top 2–4 in equal weight, and pay 0.10% per trade.
+3. **Out-of-sample test:** each signal's settings are chosen on 1927–1989, then tested unchanged on
+   1990–today and on the ETFs, with Holm-adjusted p-values.
+
+```bash
+uv run review-pulse sectors
+```
+
 ## Setup
 
 Needs [uv](https://docs.astral.sh/uv/). The default install is the CUDA build of PyTorch. For a CPU-only

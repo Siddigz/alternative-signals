@@ -2,6 +2,58 @@
 
 Full charts and tables: `reports/report.html` (open it in a browser).
 
+## Sector rotation, step 1: price signals (2026-11-14)
+
+**Short answer: industry momentum is real but has faded, and it doesn't show up in the sector ETFs you
+can buy.** Holding the 3 industries with the best past year beat holding all 12 by 3.3% a year from 1990
+to 2026 (t 3.1). The rule was chosen only on 1927–1989 data, so this is a true out-of-sample result.
+
+- **Since 1999 it's weaker:** +2.6% a year (t 1.6).
+- **By decade:** close to nothing in the 2000s and 2010s, then +5% a year in the 2020s.
+- **On the SPDR sector ETFs** (1999–2026) the same rule added +0.9% a year (t 0.7), which could easily be luck.
+
+Full page: `reports/sectors.html`.
+
+### What was tested
+
+- **Data:**
+  - Ken French's monthly returns for 12 and 49 US industries, 1926–2026.
+  - The 11 SPDR sector ETFs, 1999–2026.
+- **Rule:** each month, hold the top-ranked sectors in equal weight, with a 0.10% trading cost, against
+  holding every sector equally.
+- **Signals and settings:**
+  - Momentum: look-back of 3, 6, 9 or 12 months, with or without skipping the latest month.
+  - Short-term reversal: buy last month's losers.
+  - Low volatility: hold the calmest sectors.
+  - Each held the top 2, 3 or 4 sectors.
+- **Selection:** each signal's best setting on 1927–1989 was tested unchanged on 1990–2026 and on the ETFs.
+  Holm-adjusted p-values allow for testing three signals.
+
+### Results (1990–2026, vs all 12 industries)
+
+| Signal (chosen on 1927–1989) | Yearly gain vs all | t | Holm p | ETFs 1999–2026 alpha (t) |
+|---|---|---|---|---|
+| Momentum, 12 months, top 3 | +3.3% | 3.1 | < 0.01 | +0.9% (0.7) |
+| Reversal, top 2 | −6.8% | −5.4 | – | −3.6% (−2.2) |
+| Low volatility, 36 months, top 4 | −2.1% | 0.0 | – | +0.3% (0.3) |
+
+- Momentum was positive out of sample in 22 of 24 settings, with both 12 and 49 industries.
+- Reversal lost badly. At the industry level last month's winners keep winning, which is momentum again.
+- Momentum trades about 5 times the portfolio a year, and it has had sharp losing spells: the worst 12 months
+  trailed all industries by 33%, in 1933.
+
+### What it means
+
+The idea has a century of support, but recent decades are much weaker. On the ETFs a real investor would
+use, it can't be told apart from luck. It's not worth trading on its own. Steps 2 and 3 test whether the
+business cycle or our alt data (insider and Congress buying by sector) add anything.
+
+### Halal
+
+The sector ETFs don't pass a Shariah screen: the financials fund holds banks, and the others include
+companies over the debt limits. Live use would mean halal-screened stocks within the chosen sectors, with
+financials left out.
+
 ## Copying Congress (2026-11-13)
 
 **Short answer: no. Copying the House members with the best past record, from the day their trades were
