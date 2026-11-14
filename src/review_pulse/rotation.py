@@ -71,13 +71,18 @@ def weights(sig: pd.DataFrame, k: int) -> pd.DataFrame:
 
 def backtest(rets: pd.DataFrame, rule: Rule) -> pd.DataFrame:
     """Monthly portfolio return (after costs), turnover and the equal-weight benchmark."""
-    w = weights(signal(rets, rule), rule.k).shift(1).fillna(0.0)  # chosen at the end of t, held in t+1
+    return backtest_weights(rets, weights(signal(rets, rule), rule.k), rule.cost)
+
+
+def backtest_weights(rets: pd.DataFrame, chosen: pd.DataFrame, cost: float = 0.001) -> pd.DataFrame:
+    """Backtest any weights: `chosen` row t is decided at the end of month t and held during t+1."""
+    w = chosen.reindex(index=rets.index, columns=rets.columns).shift(1).fillna(0.0)
     held = w.sum(axis=1) > 0
     gross = (w * rets.fillna(0.0)).sum(axis=1)
     turnover = w.diff().abs().sum(axis=1)  # the first purchase counts as buying from cash
     turnover.iloc[0] = w.iloc[0].abs().sum()
     out = pd.DataFrame({
-        "ret": gross - rule.cost * turnover,
+        "ret": gross - cost * turnover,
         "turnover": turnover,
         "ew": rets.mean(axis=1),  # all sectors that exist that month, equal weight
     })[held]

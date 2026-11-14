@@ -2,6 +2,47 @@
 
 Full charts and tables: `reports/report.html` (open it in a browser).
 
+## Sector rotation, step 2: business-cycle signals (2026-11-14)
+
+**Short answer: the textbook rule ("go defensive when the economy slows") doesn't work, and adding it to
+momentum doesn't help either.** A regression forecast built on the indicators looked good from 1990, but it
+leans on the 2020s and shows nothing on the ETFs, so it's worth watching, not proven. Full page:
+`reports/sectors.html` (step 2 section).
+
+### What was tested
+
+- **Indicators (FRED):** the yield curve (10-year minus 3-month Treasury), inflation, industrial production
+  and unemployment.
+  - Each is used only from the month it was published.
+  - FRED serves revised figures, which flatters these signals slightly.
+- **Warnings:** an inverted curve, rising unemployment (Sahm rule), falling production, or any of these.
+  A warning was on 37% of months since 1955.
+- **Strategies:**
+  - Defensive switch: hold staples, health care, utilities and telecom during a warning, and cyclical
+    sectors otherwise.
+  - Momentum plus switch: step 1's momentum rule, but picking only defensive sectors during a warning.
+  - Macro forecast: a regression of each sector's next-month return on the four indicators, refitted each
+    month on past data only, holding the top 3.
+- **Selection:** settings chosen on 1955–1989, then tested on 1990–2026 and on the sector ETFs.
+
+### Results (1990–2026, vs all 12 industries)
+
+| Strategy | Yearly gain vs all | t | Worst drop | ETFs alpha (t) |
+|---|---|---|---|---|
+| Plain momentum (step 1, reference) | +3.3% | 2.5 | −44% | – |
+| Defensive switch, best version | +0.4% | −0.6 (alpha) | – | about 0 |
+| Momentum + switch (inverted curve, chosen) | +2.4% | 2.4 (alpha) | −42% | +1.4% (1.1) |
+| Momentum + switch (any warning) | +1.6% | 2.7 (alpha) | −32% | +1.6% (1.2) |
+| Macro forecast, top 3 | +3.7% | 2.8 (alpha) | −45% | −0.2% (−0.1), from 2009 |
+
+- **The textbook pattern reversed after 1990.** In months after a warning, utilities trailed all
+  industries by 5.6% a year and consumer durables beat them by 12.8%, the opposite of the usual advice.
+- **The switch lowers risk but costs return.** It cut momentum's worst drop from −44% to −32%, but it also
+  cost 0.9–1.7% a year against plain momentum.
+- **The macro forecast is fragile.** It earned +2.2% a year (t 1.8) from 1990 to 2019, and 2020–2026
+  (+10.6% a year) carries the overall result. It found nothing on the ETFs from 2009, the first year it had
+  10 years of history to fit.
+
 ## Sector rotation, step 1: price signals (2026-11-14)
 
 **Short answer: industry momentum is real but has faded, and it doesn't show up in the sector ETFs you

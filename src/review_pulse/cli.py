@@ -43,6 +43,7 @@ def main(argv: list[str] | None = None) -> None:
         from . import rotation_report
         r = rotation_report.run()
         print(rotation_report.verdict(r))
+        print(rotation_report.cycle_verdict(r["cycle"]))
         print("Report:", rotation_report.write(r))
         return
     if a.step == "congress-alerts":

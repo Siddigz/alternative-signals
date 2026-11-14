@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
-from . import rotation, sectors
+from . import cycle, macro, rotation, sectors
 from .config import REPORTS
 
 BLUE, GREY, INK, ORANGE = "#2a6fdb", "#8a8986", "#1f1f1f", "#d9622b"
@@ -33,7 +33,69 @@ def run() -> dict:
     for rule in chosen["rule"]:
         s = rotation.stats(rotation.backtest(secs, rule), rfe, market=e["SPY"])
         etf_rows.append({"label": rule.label, **s})
-    return {"grid12": res[12], "grid49": res[49], "chosen": chosen, "etf": pd.DataFrame(etf_rows), "rf": rf}
+    return {"grid12": res[12], "grid49": res[49], "chosen": chosen, "etf": pd.DataFrame(etf_rows), "rf": rf,
+            "cycle": run_cycle(rf, e)}
+
+
+def run_cycle(rf: pd.Series, e: pd.DataFrame) -> dict:
+    """Step 2: business-cycle strategies on the 12 industries (1955-) and the sector ETFs."""
+    ind = macro.indicators()
+    i12 = sectors.industries(12)
+    df = cycle.evaluate(i12, rf, "industries", ind)
+    ref = rotation.backtest(i12.loc[cycle.IN_SAMPLE[0]:], rotation.Rule("momentum", 12, 0, 3))
+    ref_in = rotation.stats(ref, rf, start=cycle.IN_SAMPLE[0], end=cycle.IN_SAMPLE[1])
+    ref_out = rotation.stats(ref, rf, start=cycle.OUT_SAMPLE[0])
+    secs, rfe = e.drop(columns=["SPY"]), sectors.fill_rf(rf, e.index)
+    etf = {label: rotation.stats(rotation.backtest_weights(secs, w), rfe)
+           for label, w in cycle.strategies(secs, "etfs", ind).items()}
+    warn = cycle.warning(macro.regimes(ind), "any warning")
+    by_regime = pd.concat([cycle.sector_by_regime(i12, warn, "1955", "1989"),
+                           cycle.sector_by_regime(i12, warn, "1990", None)], axis=1,
+                          keys=["1955–1989", "1990–2026"])
+    fc = rotation.backtest_weights(i12.loc["1955":], cycle.forecast_weights(i12.loc["1955":], ind, 3))
+    fc_pre2020 = rotation.stats(fc, rf, start="1990", end="2019-12")
+    return {"grid": df, "ref_in": ref_in, "ref_out": ref_out, "etf": etf, "by_regime": by_regime,
+            "warning_share": cycle.time_in_warning(ind.loc["1955":]), "fc_pre2020": fc_pre2020,
+            "latest": ind.dropna().iloc[-1], "latest_date": ind.dropna().index[-1]}
+
+
+def cycle_verdict(c: dict) -> str:
+    g = c["grid"].set_index("label")
+    sw = g[g["family"] == "defensive switch"]
+    fc = g.loc["macro forecast, top 3"]
+    return ("Moving into defensive sectors when the economy looks to be slowing did not work: no version beat holding all "
+            f"industries by a meaningful margin from 1990 (best {sw['out_active'].max():+.1%} a year, worst "
+            f"{sw['out_active'].min():+.1%}) or on the ETFs. "
+            "Adding the switch to momentum lowered its worst drop but also its return. A regression forecast on the "
+            f"four indicators beat all industries by {fc['out_active']:+.1%} a year from 1990 (t {fc['out_t_alpha']:.1f}), "
+            f"but only {c['fc_pre2020']['active']:+.1%} (t {c['fc_pre2020']['t_active']:.1f}) before 2020, and nothing on "
+            f"the ETFs since 2009 ({c['etf']['macro forecast, top 3']['alpha']:+.1%}). Worth watching, not proven.")
+
+
+def cycle_table(c: dict) -> str:
+    g = c["grid"]
+    rows = [f"<tr><td><i>Reference: plain momentum (step 1)</i></td><td>{_p(c['ref_in']['active'])}</td>"
+            f"<td>{_p(c['ref_out']['active'])} <span class=muted>(t {c['ref_out']['t_active']:.1f})</span></td>"
+            f"<td>{c['ref_out']['max_dd']:.0%}</td><td>–</td></tr>"]
+    for x in g.itertuples():
+        e = c["etf"][x.label]
+        rows.append(f"<tr><td>{html.escape(x.label)}{' ✓' if x.chosen else ''}</td><td>{_p(x.in_active)} "
+                    f"<span class=muted>(t {x.in_t_alpha:.1f})</span></td><td><b>{_p(x.out_active)}</b> "
+                    f"<span class=muted>(t {x.out_t_alpha:.1f})</span></td><td>{x.out_max_dd:.0%} "
+                    f"<span class=muted>vs {x.out_ew_max_dd:.0%}</span></td>"
+                    f"<td>{_p(e['alpha'])} <span class=muted>(t {e['t_alpha']:.1f})</span></td></tr>")
+    return ("<table><thead><tr><th>Strategy (✓ = chosen on 1955–1989)</th><th>1955–1989 vs all</th>"
+            "<th>1990–2026 vs all</th><th>Worst drop 1990–2026</th><th>Sector ETFs: alpha</th></tr></thead>"
+            f"<tbody>{''.join(rows)}</tbody></table>")
+
+
+def regime_table(c: dict) -> str:
+    b = c["by_regime"]
+    names = sectors.INDUSTRY_NAMES
+    rows = "".join(f"<tr><td>{html.escape(names.get(i, i))}{' (defensive)' if i in cycle.DEFENSIVE['industries'] else ''}</td>"
+                   + "".join(f"<td>{_p(v)}</td>" for v in b.loc[i]) + "</tr>" for i in b.index)
+    return ("<table><thead><tr><th>Industry</th><th>1955–89, warning on</th><th>1955–89, off</th>"
+            f"<th>1990–2026, warning on</th><th>1990–2026, off</th></tr></thead><tbody>{rows}</tbody></table>")
 
 
 def verdict(r: dict) -> str:
@@ -153,6 +215,26 @@ testing three signals.</li>
 and {int((m49['out_active'] > 0).sum())} of {len(m49)} with 49, so the result doesn't rest on one lucky setting.</p>
 <details><summary>12 industries</summary><div class="wrap">{grid_table(g12)}</div></details>
 <details><summary>49 industries</summary><div class="wrap">{grid_table(g49)}</div></details>
+<h2>Step 2: business-cycle signals</h2>
+<p class="lead">{html.escape(cycle_verdict(r["cycle"]))}</p>
+<ul>
+<li>Indicators from FRED, each used only from the month it was published: the yield curve (10-year minus 3-month
+Treasury), inflation, industrial production and unemployment. Warnings: inverted curve, rising unemployment (the Sahm
+rule), falling production, or any of them. A warning was on {r["cycle"]["warning_share"]["any warning"]:.0%} of months
+since 1955.</li>
+<li>Strategies: hold defensive sectors (staples, health care, utilities, telecom) while a warning is on and cyclical
+ones otherwise; step 1's momentum but only among defensives during a warning; and a regression forecast of each
+sector's next-month return from the four indicators, refitted each month on past data only.</li>
+<li>Settings chosen on 1955–1989, tested on 1990–2026 and on the ETFs.</li>
+</ul>
+<div class="wrap">{cycle_table(r["cycle"])}</div>
+<p>The textbook pattern didn't hold. Each industry's yearly return relative to all industries in the month after a
+warning was on or off:</p>
+<div class="wrap">{regime_table(r["cycle"])}</div>
+<p class="muted">Latest readings ({r["cycle"]["latest_date"]:%Y-%m}): yield curve {r["cycle"]["latest"]["term"]:+.2f} points,
+inflation {r["cycle"]["latest"]["inflation"]:.1%}, industrial production {r["cycle"]["latest"]["production"]:+.1%},
+unemployment gap {r["cycle"]["latest"]["unemp_gap"]:.2f}. FRED serves revised figures, which flatters macro signals
+a little.</p>
 <h2>Halal use</h2>
 <p>The sector ETFs themselves don't pass a Shariah screen: the financials fund holds banks and the others include
 companies over the debt limits. If a rotation signal were used live, it would mean holding halal-screened stocks

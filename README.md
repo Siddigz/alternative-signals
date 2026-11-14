@@ -89,6 +89,9 @@ Does holding the sectors a signal ranks highest beat holding every sector (`repo
    to that month), hold the top 2–4 in equal weight, and pay 0.10% per trade.
 3. **Out-of-sample test:** each signal's settings are chosen on 1927–1989, then tested unchanged on
    1990–today and on the ETFs, with Holm-adjusted p-values.
+4. **Business cycle:** FRED indicators (yield curve, inflation, industrial production, unemployment), each used
+   from the month it was published. Tests a switch to defensive sectors during slowdown warnings, momentum with
+   that switch, and a regression forecast refitted monthly on past data; settings chosen on 1955–1989.
 
 ```bash
 uv run review-pulse sectors
