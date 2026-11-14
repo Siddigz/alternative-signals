@@ -2,6 +2,48 @@
 
 Full charts and tables: `reports/report.html` (open it in a browser).
 
+## Sector rotation, step 3: insider and Congress buying by sector (2026-11-14)
+
+**Short answer: neither works.** Holding the industries where insiders or members of Congress were buying
+did not beat holding all industries. If anything, those industries did worse, but not by more than luck
+would explain. Full page: `reports/sectors.html` (step 3 section).
+
+### What was tested
+
+- **Insiders:**
+  - Every open-market purchase and sale by officers and directors on Form 4, from 2006 to March 2026.
+  - That's 3.0 million trades in 14,062 companies, from SEC's quarterly bulk data sets.
+  - Rules chosen on 2006–2015, tested on 2016–2026.
+- **Congress:**
+  - House members' disclosed buys and sells from 2014.
+  - Rules chosen on 2014–2019, tested on 2020–2026.
+  - About 150 member-company pairs a month, versus about 3,300 for insiders.
+- **Industries:** each company is placed in one of Ken French's 12 industries by its SEC industry code
+  (92% of companies have one).
+- **Signal:** (people buying − people selling) ÷ (buying + selling) over the past 1–12 months, by filing
+  date. It's used as is or relative to the industry's own past 3 years, since tech insiders always sell
+  more (12% of tech insider trades are buys, against 52% in finance).
+- **Rule:** hold the top 2–4 industries each month, with a 0.10% trading cost.
+
+### Results
+
+| Source | Chosen rule | Out of sample vs all industries | t | Settings positive out of sample |
+|---|---|---|---|---|
+| Insiders | 3 months, top 2 | −1.8% a year (2016–2026) | −0.4 | 5 of 18 |
+| Congress | 3 months, top 2 | −6.2% a year (2020–2026) | −0.6 | 0 of 18 |
+
+- **Insiders:** in 2006–2015, the industries with the most insider buying mostly did worse (t as low as −3.3).
+  That's likely because insiders bought heavily into falling industries such as banks in 2008. Afterwards
+  the signal was about zero.
+- **Congress:** every setting trailed all industries from 2020, with a median of −5.4% a year. That fits the
+  copy-trading result: members' buying doesn't point to winners. Over 36 tries, no single result clears a
+  multiple-testing correction.
+
+### Sector rotation overall
+
+Of everything tested in steps 1–3, only industry momentum has held up out of sample, and it's weak since
+2000 and invisible on the sector ETFs. None of it is worth trading on its own.
+
 ## Sector rotation, step 2: business-cycle signals (2026-11-14)
 
 **Short answer: the textbook rule ("go defensive when the economy slows") doesn't work, and adding it to

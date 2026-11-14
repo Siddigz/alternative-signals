@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
-from . import cycle, macro, rotation, sectors
+from . import altsector, cycle, macro, rotation, sectors
 from .config import REPORTS
 
 BLUE, GREY, INK, ORANGE = "#2a6fdb", "#8a8986", "#1f1f1f", "#d9622b"
@@ -34,7 +34,50 @@ def run() -> dict:
         s = rotation.stats(rotation.backtest(secs, rule), rfe, market=e["SPY"])
         etf_rows.append({"label": rule.label, **s})
     return {"grid12": res[12], "grid49": res[49], "chosen": chosen, "etf": pd.DataFrame(etf_rows), "rf": rf,
-            "cycle": run_cycle(rf, e)}
+            "cycle": run_cycle(rf, e), "alt": run_alt(rf)}
+
+
+def run_alt(rf: pd.Series) -> dict | None:
+    """Step 3: insider and Congress net buying by industry (None until the data has been fetched)."""
+    try:
+        counts = {"insiders": altsector.insider_counts(), "congress": altsector.congress_counts()}
+    except (SystemExit, FileNotFoundError):
+        return None
+    i12 = sectors.industries(12)
+    df = altsector.evaluate(i12, rf, counts)
+    chosen = df[df["chosen"]].copy()
+    chosen["p_out"] = chosen["out_t_alpha"].map(rotation.p_from_t)
+    chosen["holm_out"] = rotation.holm(chosen["p_out"]).to_numpy()
+    b, s_ = counts["insiders"]
+    latest = altsector.net_ratio(b, s_, 3, True).dropna(how="all").iloc[-1].sort_values(ascending=False)
+    return {"grid": df, "chosen": chosen, "latest": latest, "latest_date": b.index[-1],
+            "insider_pairs": int(b.to_numpy().sum() + s_.to_numpy().sum())}
+
+
+def alt_verdict(a: dict) -> str:
+    c = a["chosen"].set_index("source")
+    parts = []
+    for src, name in (("insiders", "Insider buying"), ("congress", "Congress buying")):
+        if src not in c.index:
+            continue
+        x = c.loc[src]
+        ok = x["holm_out"] < 0.05 and x["out_alpha"] > 0
+        parts.append(f"{name} ({x['label']}, chosen on {altsector.SPLITS[src][0][0][:4]}–{altsector.SPLITS[src][0][1][:4]}) "
+                     f"{'beat' if x['out_active'] > 0 else 'trailed'} all industries by {abs(x['out_active']):.1%} a year "
+                     f"afterwards (alpha t {x['out_t_alpha']:.1f}, Holm p {x['holm_out']:.2f}): "
+                     + ("unlikely to be luck." if ok else "could easily be luck."))
+    return " ".join(parts)
+
+
+def alt_table(a: dict) -> str:
+    rows = []
+    for x in a["grid"].sort_values(["source", "in_t_alpha"], ascending=[True, False]).itertuples():
+        (i0, i1), (o0, _) = altsector.SPLITS[x.source]
+        rows.append(f"<tr><td>{html.escape(x.label)}{' ✓' if x.chosen else ''}</td>"
+                    f"<td>{_p(x.in_active)} <span class=muted>(t {x.in_t_alpha:.1f})</span></td>"
+                    f"<td><b>{_p(x.out_active)}</b> <span class=muted>(t {x.out_t_alpha:.1f})</span></td></tr>")
+    return ("<table><thead><tr><th>Rule (✓ = chosen in sample)</th><th>In sample vs all</th><th>Out of sample vs all</th>"
+            f"</tr></thead><tbody>{''.join(rows)}</tbody></table>")
 
 
 def run_cycle(rf: pd.Series, e: pd.DataFrame) -> dict:
@@ -165,6 +208,27 @@ def grid_table(df: pd.DataFrame) -> str:
             f"</thead><tbody>{rows}</tbody></table>")
 
 
+def alt_section(a: dict | None) -> str:
+    if a is None:
+        return "<h2>Step 3: insider and Congress buying by sector</h2><p class='muted'>Not run yet: review-pulse sectors-fetch</p>"
+    latest = ", ".join(f"{html.escape(sectors.INDUSTRY_NAMES.get(i, i))} {v:+.2f}" for i, v in a["latest"].head(3).items())
+    return f"""<h2>Step 3: insider and Congress buying by sector</h2>
+<p class="lead">{html.escape(alt_verdict(a))}</p>
+<ul>
+<li><b>Insiders:</b> every open-market purchase and sale by officers and directors on Form 4 since 2006
+({a['insider_pairs']:,} insider-company-month records), from SEC's bulk data sets. Rules chosen on 2006–2015, tested
+on 2016–2026.</li>
+<li><b>Congress:</b> House members' disclosed buys and sells since 2014. Rules chosen on 2014–2019, tested on
+2020–2026. Far fewer trades, so a much noisier signal.</li>
+<li>Each company is placed in one of the 12 industries by its SEC industry code. Signal: (people buying − people
+selling) ÷ (buying + selling) over the past 1–12 months, by filing date, as is or relative to the industry's own
+past 3 years. Hold the top 2–4 industries for a month, 0.10% trading cost.</li>
+</ul>
+<details><summary>Every rule tried</summary><div class="wrap">{alt_table(a)}</div></details>
+<p class="muted">Industries with the most insider buying relative to their own past (3 months to
+{a['latest_date']:%Y-%m}): {latest}.</p>"""
+
+
 def write(r: dict) -> str:
     mom = r["chosen"].set_index("signal").loc["momentum", "rule"]
     g12, g49 = r["grid12"], r["grid49"]
@@ -235,6 +299,7 @@ warning was on or off:</p>
 inflation {r["cycle"]["latest"]["inflation"]:.1%}, industrial production {r["cycle"]["latest"]["production"]:+.1%},
 unemployment gap {r["cycle"]["latest"]["unemp_gap"]:.2f}. FRED serves revised figures, which flatters macro signals
 a little.</p>
+{alt_section(r.get("alt"))}
 <h2>Halal use</h2>
 <p>The sector ETFs themselves don't pass a Shariah screen: the financials fund holds banks and the others include
 companies over the debt limits. If a rotation signal were used live, it would mean holding halal-screened stocks

@@ -92,8 +92,12 @@ Does holding the sectors a signal ranks highest beat holding every sector (`repo
 4. **Business cycle:** FRED indicators (yield curve, inflation, industrial production, unemployment), each used
    from the month it was published. Tests a switch to defensive sectors during slowdown warnings, momentum with
    that switch, and a regression forecast refitted monthly on past data; settings chosen on 1955–1989.
+5. **Alt data by sector:** officers' and directors' open-market buys and sells from SEC's bulk Form 4 data sets
+   (2006 on) and House members' trades (2014 on), grouped into the 12 industries by SEC industry code. Industries
+   with the most net buying are held; rules chosen on the first half of each period.
 
 ```bash
+uv run review-pulse sectors-fetch   # bulk insider data and industry codes (about 1 GB, an hour the first time)
 uv run review-pulse sectors
 ```
 

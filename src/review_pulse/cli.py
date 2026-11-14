@@ -24,7 +24,7 @@ SOURCES = {  # name: fetch(company, cfg)
 def main(argv: list[str] | None = None) -> None:
     p = argparse.ArgumentParser(prog="review-pulse", description=__doc__)
     p.add_argument("step", choices=["fetch", "score", "analyze", "report", "watchlist", "all",
-                                    "congress-fetch", "congress", "congress-alerts", "sectors"])
+                                    "congress-fetch", "congress", "congress-alerts", "sectors", "sectors-fetch"])
     p.add_argument("--company", "-c", nargs="*", help="Tickers to run (default: all in config)")
     p.add_argument("--per-quarter", type=int, default=1000, help="Reviews scored per quarter (default 1000)")
     p.add_argument("--min-reviews", type=int, default=30, help="Skip quarters with fewer scored reviews")
@@ -39,11 +39,19 @@ def main(argv: list[str] | None = None) -> None:
         trades = congress.fetch()
         congress.fetch_prices(sorted(copytrade.buys(trades)["ticker"].unique()))
         return
+    if a.step == "sectors-fetch":
+        from . import altsector
+        ins = altsector.fetch_insiders()
+        altsector.fetch_cik_sic(sorted(ins["issuer_cik"].astype(int).unique()))
+        altsector.congress_counts()  # looks up industry codes for tickers members sold
+        return
     if a.step == "sectors":
         from . import rotation_report
         r = rotation_report.run()
         print(rotation_report.verdict(r))
         print(rotation_report.cycle_verdict(r["cycle"]))
+        if r.get("alt"):
+            print(rotation_report.alt_verdict(r["alt"]))
         print("Report:", rotation_report.write(r))
         return
     if a.step == "congress-alerts":
