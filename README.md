@@ -122,6 +122,8 @@ uv run review-pulse all                     # every company in config/companies.
 Steps can also be run one at a time: `fetch`, `score`, `analyze`, `report`, `watchlist`. The report is written
 to `reports/report.html` and the watchlist to `reports/watchlist.html`. `fetch --skip-reviews --sources ...`
 fetches only some sources (financials, prices, wiki, trends, filings, earnings, insiders, shorts).
+`score --per-quarter N` sets how many reviews are scored per quarter (default 1,000), and
+`analyze --min-reviews N` drops quarters with fewer scored reviews (default 30).
 
 The dataset files are large (Electronics alone is about 7.8 GB) and are cached in `data/raw/`. Pass
 `--delete-raw` to `fetch` to remove them after filtering. `fetch` also lists similar brand-store names
