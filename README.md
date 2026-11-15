@@ -103,8 +103,9 @@ uv run review-pulse sectors
 
 ## Setup
 
-Needs [uv](https://docs.astral.sh/uv/). The default install is the CUDA build of PyTorch. For a CPU-only
-machine, delete the `[tool.uv.sources]` and `[[tool.uv.index]]` tables in `pyproject.toml`.
+Needs [uv](https://docs.astral.sh/uv/). On Windows and Linux the default install is the CUDA build of PyTorch;
+on macOS it is the regular build, which uses the Apple GPU. For a CPU-only Windows or Linux machine, delete the
+`[tool.uv.sources]` and `[[tool.uv.index]]` tables in `pyproject.toml`.
 
 ```bash
 uv sync
