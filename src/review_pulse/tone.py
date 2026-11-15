@@ -34,7 +34,12 @@ class Scorer:
         from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
         self.torch = torch
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        if torch.cuda.is_available():
+            self.device = "cuda"
+        elif torch.backends.mps.is_available():  # Apple Silicon GPU
+            self.device = "mps"
+        else:
+            self.device = "cpu"
         self.tok = AutoTokenizer.from_pretrained(MODEL)
         self.model = AutoModelForSequenceClassification.from_pretrained(MODEL).to(self.device).eval()
         if self.device == "cuda":
