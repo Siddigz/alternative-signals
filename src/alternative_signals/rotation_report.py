@@ -210,7 +210,7 @@ def grid_table(df: pd.DataFrame) -> str:
 
 def alt_section(a: dict | None) -> str:
     if a is None:
-        return "<h2>Step 3: insider and Congress buying by sector</h2><p class='muted'>Not run yet: review-pulse sectors-fetch</p>"
+        return "<h2>Step 3: insider and Congress buying by sector</h2><p class='muted'>Not run yet: alternative-signals sectors-fetch</p>"
     latest = ", ".join(f"{html.escape(sectors.INDUSTRY_NAMES.get(i, i))} {v:+.2f}" for i, v in a["latest"].head(3).items())
     return f"""<h2>Step 3: insider and Congress buying by sector</h2>
 <p class="lead">{html.escape(alt_verdict(a))}</p>

@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from review_pulse import cycle, macro
+from alternative_signals import cycle, macro
 
 FRED = """observation_date,UNRATE
 2020-01-01,3.5

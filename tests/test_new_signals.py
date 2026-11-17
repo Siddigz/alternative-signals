@@ -2,10 +2,10 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-from review_pulse import analysis
-from review_pulse.earnings import reported_quarter, window_return
-from review_pulse.insiders import parse_form4
-from review_pulse.quarters import qidx
+from alternative_signals import analysis
+from alternative_signals.earnings import reported_quarter, window_return
+from alternative_signals.insiders import parse_form4
+from alternative_signals.quarters import qidx
 
 FORM4 = """<?xml version="1.0"?>
 <ownershipDocument>

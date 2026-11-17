@@ -89,7 +89,7 @@ def quarterly(company: Company) -> pd.DataFrame:
     """Per fiscal quarter: mean tone (scored sample), mean stars and review count (all reviews)."""
     path = TONE / f"{company.ticker}.parquet"
     if not path.exists():
-        raise SystemExit(f"No tone scores for {company.ticker}. Run: review-pulse score --company {company.ticker}")
+        raise SystemExit(f"No tone scores for {company.ticker}. Run: alternative-signals score --company {company.ticker}")
     scored = pd.read_parquet(path)
     allr = add_quarter_columns(reviews.load(company.ticker), "date", company.fy_end_month)
     t = scored.groupby(["qidx", "quarter"]).agg(

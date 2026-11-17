@@ -1,8 +1,9 @@
-# review-pulse
+# alternative-signals
 
 Do free "alternative data" signals predict a company's results and stock returns? Seven signals are tested:
 
-- **Review tone and star rating:** how positive a brand's Amazon reviews are (to 2023)
+- **Review tone:** how positive the text of a brand's Amazon reviews is (to 2023)
+- **Star rating:** the average star rating on those reviews, kept separate as a baseline
 - **Wikipedia interest:** pageviews of the company's and brands' articles
 - **Google search interest:** Google Trends for the main brand names
 - **Filing wording:** how often negative and uncertainty words appear in its 10-K and 10-Q filings
@@ -15,6 +16,27 @@ the other signals, on past data for consumer-product companies that sell heavily
 shows each company's latest readings and a halal (Shariah) screen for live use.
 
 Research only. Not investment advice.
+
+## Key findings
+
+Full details and tables are in [FINDINGS.md](FINDINGS.md).
+
+- **Google search interest is the one signal that holds up.** Across 40 companies, when searches for
+  a company's brands rise faster than a year earlier, that quarter's sales tend to beat what past growth
+  predicted (correlation +0.20, q = 0.005), and the stock does slightly better than the market the
+  next quarter (+0.10). Both hold in every robustness split.
+- **Review tone, Wikipedia views and filing wording predict nothing,** despite the study this project
+  started from.
+- **Copying Congress doesn't work.** The best-ranked House members did no better than the rest, and no
+  group beat SPY or QQQ by more than luck would explain.
+- **Sector rotation:** industry momentum beat holding all industries by 3.3% a year from 1990 (chosen
+  on pre-1990 data only), but it has faded and doesn't show up in the sector ETFs. Business-cycle rules
+  and insider or Congress buying by sector add nothing.
+
+![Correlation of each signal with sales surprises and next-quarter returns](docs/signals.png)
+
+Star rating, short interest and filing wording also pass the multiple-testing check for returns, but
+they don't hold up across time periods. Google search interest is the only signal that does.
 
 ## How it works
 
@@ -62,6 +84,8 @@ Results so far are in [FINDINGS.md](FINDINGS.md).
 A separate backtest tests the claim that you can profit by copying the stock buys of the best-performing
 members of Congress once their trades are disclosed (`reports/congress.html`).
 
+![Growth of $1 copying the best, all, and worst House members vs SPY and QQQ](docs/copying-congress.png)
+
 1. **Data:** every House periodic transaction report (STOCK Act) since 2014, from the House Clerk's site.
    Electronic reports are parsed; paper reports are scanned images and are skipped (most reports before 2018,
    about 13% now).
@@ -74,14 +98,16 @@ members of Congress once their trades are disclosed (`reports/congress.html`).
    ranking window, years, drop options, or keep only shares in permissible (halal) industries.
 
 ```bash
-uv run review-pulse congress-fetch   # download and parse reports, then prices (about an hour the first time)
-uv run review-pulse congress         # run the backtest and write reports/congress.html
-uv run review-pulse congress-alerts  # daily check: new buys by this year's top-ranked members, halal-screened
+uv run alternative-signals congress-fetch   # download and parse reports, then prices (about an hour the first time)
+uv run alternative-signals congress         # run the backtest and write reports/congress.html
+uv run alternative-signals congress-alerts  # daily check: new buys by this year's top-ranked members, halal-screened
 ```
 
 ## Sector rotation
 
 Does holding the sectors a signal ranks highest beat holding every sector (`reports/sectors.html`)?
+
+![Growth of $1: industry momentum vs all 12 industries and the US market since 1927](docs/sector-rotation.png)
 
 1. **Data:** Ken French's monthly US industry returns (12 and 49 industries, 1926–today) and the SPDR sector
    ETFs (1999–today).
@@ -97,8 +123,8 @@ Does holding the sectors a signal ranks highest beat holding every sector (`repo
    with the most net buying are held; rules chosen on the first half of each period.
 
 ```bash
-uv run review-pulse sectors-fetch   # bulk insider data and industry codes (about 1 GB, an hour the first time)
-uv run review-pulse sectors
+uv run alternative-signals sectors-fetch   # bulk insider data and industry codes (about 1 GB, an hour the first time)
+uv run alternative-signals sectors
 ```
 
 ## Setup
@@ -115,8 +141,8 @@ cp .env.example .env   # then set SEC_USER_AGENT="Your Name you@example.com" (SE
 ## Run
 
 ```bash
-uv run review-pulse all --company LOGI      # one company end to end
-uv run review-pulse all                     # every company in config/companies.yaml
+uv run alternative-signals all --company LOGI      # one company end to end
+uv run alternative-signals all                     # every company in config/companies.yaml
 ```
 
 Steps can also be run one at a time: `fetch`, `score`, `analyze`, `report`, `watchlist`. The report is written

@@ -198,7 +198,7 @@ delay. Full page: `reports/congress.html`.
 
 ### Daily check
 
-`review-pulse congress-alerts` downloads new House reports, lists buys by this year's top-ranked members from
+`alternative-signals congress-alerts` downloads new House reports, lists buys by this year's top-ranked members from
 the last 7 days, runs each stock through the halal screen, and writes `reports/congress_alerts.html`. Given
 the backtest, treat it as a news feed, not a trading signal.
 

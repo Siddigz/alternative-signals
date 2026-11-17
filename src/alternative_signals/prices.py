@@ -60,5 +60,5 @@ def fetch(company: Company, start: str, end: str) -> None:
 def load(ticker: str) -> pd.Series:
     path = PRICES / f"{ticker}.parquet"
     if not path.exists():
-        raise SystemExit(f"No prices for {ticker}. Run: review-pulse fetch --company {ticker}")
+        raise SystemExit(f"No prices for {ticker}. Run: alternative-signals fetch --company {ticker}")
     return pd.read_parquet(path)["close"]

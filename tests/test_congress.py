@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
 
-from review_pulse import copytrade
-from review_pulse.congress import parse
+from alternative_signals import copytrade
+from alternative_signals.congress import parse
 
 NEW = """ID Owner Asset Transaction Date Notification Amount Cap.
 Type Date Gains >

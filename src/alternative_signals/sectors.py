@@ -18,7 +18,7 @@ from .config import DATA
 
 DIR = DATA / "sectors"
 FRENCH = "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/{}_CSV.zip"
-HEADERS = {"User-Agent": "review-pulse/0.1 (research script)"}
+HEADERS = {"User-Agent": "alternative-signals/0.1 (research script)"}
 
 # The 11 SPDR sector funds (real estate from Oct 2015, communication services from Jun 2018).
 ETFS = {"XLB": "Materials", "XLE": "Energy", "XLF": "Financials", "XLI": "Industrials", "XLK": "Technology",

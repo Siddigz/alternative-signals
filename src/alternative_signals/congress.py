@@ -26,7 +26,7 @@ import requests
 from .config import DATA
 
 BASE = "https://disclosures-clerk.house.gov/public_disc"
-HEADERS = {"User-Agent": "review-pulse/0.1 (research script)"}
+HEADERS = {"User-Agent": "alternative-signals/0.1 (research script)"}
 DIR = DATA / "congress"
 FIRST_YEAR = 2014  # electronic filing began in 2014
 
@@ -197,7 +197,7 @@ def build_trades() -> pd.DataFrame:
 def load_trades() -> pd.DataFrame:
     path = DIR / "trades.parquet"
     if not path.exists():
-        raise SystemExit("No congress trades yet. Run: review-pulse congress-fetch")
+        raise SystemExit("No congress trades yet. Run: alternative-signals congress-fetch")
     return pd.read_parquet(path)
 
 
@@ -269,7 +269,7 @@ def fetch_prices(tickers: list[str], start: str = "2013-06-01", chunk: int = 50,
 def load_prices() -> pd.DataFrame:
     path = DIR / "prices.parquet"
     if not path.exists():
-        raise SystemExit("No congress prices yet. Run: review-pulse congress-fetch")
+        raise SystemExit("No congress prices yet. Run: alternative-signals congress-fetch")
     return pd.read_parquet(path)
 
 

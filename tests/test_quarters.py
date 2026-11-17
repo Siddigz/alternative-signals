@@ -2,7 +2,7 @@ from datetime import date
 
 import pandas as pd
 
-from review_pulse.quarters import add_quarter_columns, fiscal_quarter, period_end_quarter, quarter_bounds
+from alternative_signals.quarters import add_quarter_columns, fiscal_quarter, period_end_quarter, quarter_bounds
 
 
 def test_march_year_end_logitech():

@@ -148,7 +148,7 @@ def fetch(companies: list[Company], start: str, end: str, keep_raw: bool = True)
 def load(ticker: str) -> pd.DataFrame:
     path = REVIEWS / f"{ticker}.parquet"
     if not path.exists():
-        raise SystemExit(f"No reviews for {ticker}. Run: review-pulse fetch --company {ticker}")
+        raise SystemExit(f"No reviews for {ticker}. Run: alternative-signals fetch --company {ticker}")
     df = pd.read_parquet(path)
     df["date"] = pd.to_datetime(df["timestamp"], unit="ms").dt.date
     return df

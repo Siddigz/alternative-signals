@@ -119,7 +119,7 @@ def fetch_insiders(pause: float = 0.5) -> pd.DataFrame:
 def load_insiders() -> pd.DataFrame:
     files = sorted(DIR.glob("*.parquet"))
     if not files:
-        raise SystemExit("No bulk insider data yet. Run: review-pulse sectors-fetch")
+        raise SystemExit("No bulk insider data yet. Run: alternative-signals sectors-fetch")
     return pd.concat([pd.read_parquet(f) for f in files], ignore_index=True)
 
 

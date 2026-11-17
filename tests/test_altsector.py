@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from review_pulse import altsector
+from alternative_signals import altsector
 
 SIC = """ 1 NoDur  Consumer Nondurables -- Food, Tobacco
           0100-0999

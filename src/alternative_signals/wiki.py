@@ -17,7 +17,7 @@ from .quarters import add_quarter_columns
 WIKI = DATA / "wiki"
 API = ("https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/"
        "all-access/user/{article}/monthly/2015070100/{end}")
-HEADERS = {"User-Agent": "review-pulse/0.1 (https://github.com/Siddigz/review-pulse; research script)"}
+HEADERS = {"User-Agent": "alternative-signals/0.1 (https://github.com/Siddigz/alternative-signals; research script)"}
 
 
 def article_views(article: str, end: str, retries: int = 6) -> pd.DataFrame:

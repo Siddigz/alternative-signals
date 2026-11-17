@@ -1,4 +1,4 @@
-"""review-pulse command line."""
+"""alternative-signals command line."""
 
 import argparse
 
@@ -22,7 +22,7 @@ SOURCES = {  # name: fetch(company, cfg)
 
 
 def main(argv: list[str] | None = None) -> None:
-    p = argparse.ArgumentParser(prog="review-pulse", description=__doc__)
+    p = argparse.ArgumentParser(prog="alternative-signals", description=__doc__)
     p.add_argument("step", choices=["fetch", "score", "analyze", "report", "watchlist", "all",
                                     "congress-fetch", "congress", "congress-alerts", "sectors", "sectors-fetch"])
     p.add_argument("--company", "-c", nargs="*", help="Tickers to run (default: all in config)")

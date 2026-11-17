@@ -95,7 +95,7 @@ def write(panel: pd.DataFrame, results: pd.DataFrame, names: dict[str, str]) -> 
     summary = "".join(f"<li>{html.escape(line)}</li>" for line in verdict(results).splitlines())
     page = f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>review-pulse report</title>
+<title>alternative-signals report</title>
 <style>
   :root {{ --bg:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e; --line:#e4e3df; }}
   body {{ background:var(--bg); color:var(--ink); font:15px/1.5 system-ui,sans-serif; margin:0; }}

@@ -1,11 +1,11 @@
 import numpy as np
 import pandas as pd
 
-from review_pulse import analysis
-from review_pulse.config import Company
-from review_pulse.financials import from_facts
-from review_pulse.prices import period_return
-from review_pulse.tone import sample_per_quarter, stars_to_tone
+from alternative_signals import analysis
+from alternative_signals.config import Company
+from alternative_signals.financials import from_facts
+from alternative_signals.prices import period_return
+from alternative_signals.tone import sample_per_quarter, stars_to_tone
 
 ACME = Company(ticker="ACME", name="Acme", fy_end_month=12, stores=["Acme"], categories=["X"])
 

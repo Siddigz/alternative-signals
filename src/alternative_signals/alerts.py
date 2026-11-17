@@ -1,6 +1,6 @@
 """Daily check: new stock buys disclosed by the House members the backtest would copy, halal-screened.
 
-Run `review-pulse congress-alerts`. It downloads this year's new reports, picks out purchases filed in the
+Run `alternative-signals congress-alerts`. It downloads this year's new reports, picks out purchases filed in the
 last few days, keeps those by this year's top-ranked members (the main backtest setup), and screens each
 stock: business activity by SEC industry code, then the AAOIFI debt / cash / interest-income ratios.
 Writes reports/congress_alerts.html and prints a short summary. Buys already shown on an earlier run are

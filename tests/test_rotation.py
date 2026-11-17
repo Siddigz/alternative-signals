@@ -1,9 +1,9 @@
 import numpy as np
 import pandas as pd
 
-from review_pulse import rotation
-from review_pulse.rotation import Rule
-from review_pulse.sectors import parse_french
+from alternative_signals import rotation
+from alternative_signals.rotation import Rule
+from alternative_signals.sectors import parse_french
 
 FRENCH = """This file was created using the 202609 CRSP database.
 Missing data are indicated by -99.99 or -999.
